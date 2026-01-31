@@ -1,0 +1,1295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>❄️ Frozen Split: A Biathlon Challenge</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background: linear-gradient(135deg, #0a1929 0%, #1a3a52 50%, #2d5f7a 100%);
+            color: #e0f2ff;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        /* Animated snow background */
+        .snow-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        .snowflake {
+            position: absolute;
+            top: -10px;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 1em;
+            animation: fall linear infinite;
+        }
+        
+        @keyframes fall {
+            to {
+                transform: translateY(100vh) rotate(360deg);
+            }
+        }
+        
+        #gameContainer {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            z-index: 1;
+        }
+        
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+        
+        /* UI Overlay */
+        .ui-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+        }
+        
+        /* HUD */
+        .hud {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            display: flex;
+            justify-content: space-between;
+            pointer-events: none;
+            animation: slideDown 0.6s ease;
+        }
+        
+        @keyframes slideDown {
+            from {
+                transform: translateY(-100px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        .hud-panel {
+            background: rgba(10, 25, 41, 0.85);
+            backdrop-filter: blur(10px);
+            padding: 15px 25px;
+            border-radius: 12px;
+            border: 2px solid rgba(96, 165, 250, 0.3);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            font-family: 'Orbitron', sans-serif;
+        }
+        
+        .hud-label {
+            font-size: 12px;
+            color: #60a5fa;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 5px;
+        }
+        
+        .hud-value {
+            font-size: 28px;
+            font-weight: 900;
+            color: #fff;
+            text-shadow: 0 0 10px rgba(96, 165, 250, 0.5);
+        }
+        
+        .lives-container {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        
+        .life {
+            width: 24px;
+            height: 24px;
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            border-radius: 50%;
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.6);
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        .life.lost {
+            background: rgba(100, 100, 100, 0.3);
+            box-shadow: none;
+            animation: none;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        /* Progress Bar */
+        .progress-bar {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 400px;
+            height: 8px;
+            background: rgba(10, 25, 41, 0.7);
+            border-radius: 10px;
+            overflow: hidden;
+            border: 2px solid rgba(96, 165, 250, 0.3);
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #60a5fa 0%, #3b82f6 100%);
+            transition: width 0.3s ease;
+            box-shadow: 0 0 20px rgba(96, 165, 250, 0.8);
+        }
+        
+        /* Instructions */
+        .instructions {
+            position: absolute;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(10, 25, 41, 0.9);
+            padding: 20px 40px;
+            border-radius: 12px;
+            border: 2px solid rgba(96, 165, 250, 0.3);
+            text-align: center;
+            font-size: 18px;
+            animation: fadeIn 0.8s ease;
+            max-width: 500px;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        /* Menu Screen */
+        .menu-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(10, 25, 41, 0.95) 0%, rgba(26, 58, 82, 0.95) 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            pointer-events: all;
+        }
+        
+        .menu-screen.hidden {
+            display: none;
+        }
+        
+        .game-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 72px;
+            font-weight: 900;
+            background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 50%, #2563eb 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 40px rgba(96, 165, 250, 0.5);
+            margin-bottom: 10px;
+            animation: titleGlow 3s ease-in-out infinite;
+        }
+        
+        @keyframes titleGlow {
+            0%, 100% { filter: brightness(1); }
+            50% { filter: brightness(1.3); }
+        }
+        
+        .game-subtitle {
+            font-size: 24px;
+            color: #60a5fa;
+            margin-bottom: 50px;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+        }
+        
+        .start-button {
+            padding: 20px 60px;
+            font-size: 24px;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 40px rgba(59, 130, 246, 0.4);
+            pointer-events: all;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        .start-button:hover {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 15px 50px rgba(59, 130, 246, 0.6);
+        }
+        
+        .start-button:active {
+            transform: translateY(-2px) scale(1.02);
+        }
+        
+        .game-info {
+            margin-top: 40px;
+            text-align: center;
+            max-width: 600px;
+            line-height: 1.8;
+            color: #93c5fd;
+            font-size: 16px;
+        }
+        
+        /* Crosshair */
+        .crosshair {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            width: 40px;
+            height: 40px;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 50;
+            display: none;
+        }
+        
+        .crosshair.active {
+            display: block;
+            animation: crosshairSway 1s ease-in-out infinite;
+        }
+        
+        @keyframes crosshairSway {
+            0%, 100% { transform: translate(-50%, -50%) translate(0, 0); }
+            25% { transform: translate(-50%, -50%) translate(2px, 2px); }
+            50% { transform: translate(-50%, -50%) translate(-2px, 0); }
+            75% { transform: translate(-50%, -50%) translate(0, -2px); }
+        }
+        
+        .crosshair-line {
+            position: absolute;
+            background: rgba(239, 68, 68, 0.9);
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.8);
+        }
+        
+        .crosshair-h {
+            width: 100%;
+            height: 2px;
+            top: 50%;
+            left: 0;
+            transform: translateY(-50%);
+        }
+        
+        .crosshair-v {
+            width: 2px;
+            height: 100%;
+            left: 50%;
+            top: 0;
+            transform: translateX(-50%);
+        }
+        
+        .crosshair-center {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: rgba(239, 68, 68, 0.9);
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 15px rgba(239, 68, 68, 1);
+        }
+        
+        /* Timer */
+        .timer {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 120px;
+            font-weight: 900;
+            color: rgba(255, 255, 255, 0.15);
+            pointer-events: none;
+            z-index: 5;
+            display: none;
+            text-shadow: 0 0 30px rgba(255, 255, 255, 0.3);
+        }
+        
+        .timer.active {
+            display: block;
+        }
+        
+        .timer.warning {
+            color: rgba(239, 68, 68, 0.3);
+            animation: timerPulse 1s ease-in-out infinite;
+        }
+        
+        @keyframes timerPulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.1); }
+        }
+        
+        /* Summary Screen */
+        .summary-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(10, 25, 41, 0.98) 0%, rgba(26, 58, 82, 0.98) 100%);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            pointer-events: all;
+            padding: 40px;
+            overflow-y: auto;
+        }
+        
+        .summary-screen.active {
+            display: flex;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .summary-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 48px;
+            font-weight: 900;
+            color: #60a5fa;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+        
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            max-width: 800px;
+            margin-bottom: 30px;
+        }
+        
+        .summary-card {
+            background: rgba(10, 25, 41, 0.7);
+            padding: 25px;
+            border-radius: 12px;
+            border: 2px solid rgba(96, 165, 250, 0.3);
+            animation: slideUp 0.6s ease backwards;
+        }
+        
+        .summary-card:nth-child(1) { animation-delay: 0.1s; }
+        .summary-card:nth-child(2) { animation-delay: 0.2s; }
+        .summary-card:nth-child(3) { animation-delay: 0.3s; }
+        .summary-card:nth-child(4) { animation-delay: 0.4s; }
+        
+        @keyframes slideUp {
+            from {
+                transform: translateY(30px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        .summary-card-title {
+            font-size: 14px;
+            color: #60a5fa;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+        }
+        
+        .summary-card-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 36px;
+            font-weight: 900;
+            color: #fff;
+        }
+        
+        .insight-box {
+            background: rgba(59, 130, 246, 0.1);
+            border: 2px solid rgba(59, 130, 246, 0.3);
+            padding: 25px;
+            border-radius: 12px;
+            max-width: 800px;
+            margin: 20px 0;
+            animation: slideUp 0.6s ease 0.5s backwards;
+        }
+        
+        .insight-title {
+            font-size: 18px;
+            color: #60a5fa;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        .insight-text {
+            font-size: 20px;
+            line-height: 1.6;
+            color: #e0f2ff;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 20px;
+            margin-top: 30px;
+        }
+        
+        .replay-button {
+            padding: 15px 40px;
+            font-size: 18px;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 30px rgba(59, 130, 246, 0.4);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        .replay-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 40px rgba(59, 130, 246, 0.6);
+        }
+        
+        /* Transition Screen */
+        .transition-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(10, 25, 41, 0.95) 0%, rgba(26, 58, 82, 0.95) 100%);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 90;
+            pointer-events: all;
+        }
+        
+        .transition-screen.active {
+            display: flex;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .transition-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 56px;
+            font-weight: 900;
+            color: #60a5fa;
+            margin-bottom: 20px;
+            animation: scaleIn 0.5s ease;
+        }
+        
+        @keyframes scaleIn {
+            from {
+                transform: scale(0.5);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+        
+        .transition-stats {
+            font-size: 24px;
+            color: #93c5fd;
+            margin-bottom: 30px;
+            animation: fadeIn 0.8s ease 0.3s backwards;
+        }
+        
+        .continue-button {
+            padding: 15px 40px;
+            font-size: 20px;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 30px rgba(16, 185, 129, 0.4);
+            animation: fadeIn 1s ease 0.5s backwards;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        .continue-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 40px rgba(16, 185, 129, 0.6);
+        }
+        
+        /* Notification */
+        .notification {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            background: rgba(10, 25, 41, 0.95);
+            padding: 30px 50px;
+            border-radius: 12px;
+            border: 2px solid rgba(96, 165, 250, 0.5);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 24px;
+            font-weight: 700;
+            color: #fff;
+            z-index: 200;
+            pointer-events: none;
+            box-shadow: 0 10px 50px rgba(0, 0, 0, 0.5);
+        }
+        
+        .notification.show {
+            animation: notificationPop 0.5s ease;
+        }
+        
+        @keyframes notificationPop {
+            0% {
+                transform: translate(-50%, -50%) scale(0);
+                opacity: 0;
+            }
+            50% {
+                transform: translate(-50%, -50%) scale(1.1);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(0);
+                opacity: 0;
+            }
+        }
+        
+        /* Fatigue indicator */
+        .fatigue-indicator {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(239, 68, 68, 0.2);
+            border: 2px solid rgba(239, 68, 68, 0.5);
+            padding: 10px 30px;
+            border-radius: 8px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 16px;
+            color: #fca5a5;
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .fatigue-indicator.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <!-- Snow background -->
+    <div class="snow-bg" id="snowBg"></div>
+    
+    <!-- Menu Screen -->
+    <div class="menu-screen" id="menuScreen">
+        <div class="game-title">❄️ FROZEN SPLIT</div>
+        <div class="game-subtitle">A Biathlon Challenge</div>
+        <button class="start-button" id="startButton">Start Run</button>
+        <div class="game-info">
+            Balance speed and precision in this Olympic-inspired biathlon. Navigate snowy terrain, collect boxes, then prove your shooting accuracy. Every mistake increases fatigue and makes shooting harder. Can you handle the pressure?
+        </div>
+    </div>
+    
+    <!-- Game Container -->
+    <div id="gameContainer"></div>
+    
+    <!-- UI Overlay -->
+    <div class="ui-overlay">
+        <div class="hud">
+            <div class="hud-panel">
+                <div class="hud-label">Score</div>
+                <div class="hud-value" id="scoreDisplay">0</div>
+            </div>
+            <div class="hud-panel">
+                <div class="hud-label">Boxes</div>
+                <div class="hud-value" id="boxesDisplay">0/5</div>
+            </div>
+            <div class="hud-panel">
+                <div class="hud-label">Lives</div>
+                <div class="lives-container" id="livesDisplay"></div>
+            </div>
+            <div class="hud-panel">
+                <div class="hud-label">Level</div>
+                <div class="hud-value" id="levelDisplay">1</div>
+            </div>
+        </div>
+        
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+        
+        <div class="instructions" id="instructions">
+            Press SPACEBAR to jump over obstacles
+        </div>
+        
+        <div class="timer" id="timer">60</div>
+        
+        <div class="fatigue-indicator" id="fatigueIndicator">
+            ⚠️ HIGH FATIGUE - Increased difficulty
+        </div>
+    </div>
+    
+    <!-- Crosshair -->
+    <div class="crosshair" id="crosshair">
+        <div class="crosshair-line crosshair-h"></div>
+        <div class="crosshair-line crosshair-v"></div>
+        <div class="crosshair-center"></div>
+    </div>
+    
+    <!-- Transition Screen -->
+    <div class="transition-screen" id="transitionScreen">
+        <div class="transition-title">SKIING COMPLETE</div>
+        <div class="transition-stats" id="transitionStats"></div>
+        <button class="continue-button" id="continueButton">Continue to Shooting</button>
+    </div>
+    
+    <!-- Summary Screen -->
+    <div class="summary-screen" id="summaryScreen">
+        <div class="summary-title">RUN COMPLETE</div>
+        <div class="summary-grid">
+            <div class="summary-card">
+                <div class="summary-card-title">Final Score</div>
+                <div class="summary-card-value" id="finalScore">0</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-card-title">Shooting Accuracy</div>
+                <div class="summary-card-value" id="finalAccuracy">0%</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-card-title">Obstacles Hit</div>
+                <div class="summary-card-value" id="finalObstacles">0</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-card-title">Boxes Collected</div>
+                <div class="summary-card-value" id="finalBoxes">0</div>
+            </div>
+        </div>
+        <div class="insight-box">
+            <div class="insight-title">📊 Performance Insight</div>
+            <div class="insight-text" id="insightText"></div>
+        </div>
+        <div class="button-group">
+            <button class="replay-button" id="replayButton">Play Again</button>
+        </div>
+    </div>
+    
+    <!-- Notification -->
+    <div class="notification" id="notification"></div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        // Game State
+        const gameState = {
+            mode: 'menu', // menu, skiing, shooting, summary
+            score: 0,
+            lives: 3,
+            boxesCollected: 0,
+            obstaclesHit: 0,
+            level: 1,
+            totalLevels: 3,
+            fatigueLevel: 0,
+            shootingStats: {
+                correctHits: 0,
+                incorrectHits: 0,
+                totalShots: 0,
+                accuracy: 0
+            },
+            startTime: 0,
+            levelTimes: []
+        };
+        
+        // Audio Context
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        
+        // Sound Effects
+        function playSound(type) {
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            switch(type) {
+                case 'hit':
+                    oscillator.frequency.value = 200;
+                    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+                    oscillator.start();
+                    oscillator.stop(audioContext.currentTime + 0.2);
+                    break;
+                case 'collect':
+                    oscillator.frequency.value = 800;
+                    gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.15);
+                    oscillator.start();
+                    oscillator.stop(audioContext.currentTime + 0.15);
+                    break;
+                case 'correct':
+                    oscillator.frequency.value = 1000;
+                    gainNode.gain.setValueAtTime(0.15, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+                    oscillator.start();
+                    oscillator.stop(audioContext.currentTime + 0.1);
+                    break;
+                case 'incorrect':
+                    oscillator.frequency.value = 150;
+                    gainNode.gain.setValueAtTime(0.25, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                    oscillator.start();
+                    oscillator.stop(audioContext.currentTime + 0.3);
+                    break;
+            }
+        }
+        
+        // Create snow animation
+        function createSnow() {
+            const snowBg = document.getElementById('snowBg');
+            for (let i = 0; i < 50; i++) {
+                const snowflake = document.createElement('div');
+                snowflake.className = 'snowflake';
+                snowflake.textContent = '❄';
+                snowflake.style.left = Math.random() * 100 + '%';
+                snowflake.style.animationDuration = (Math.random() * 3 + 2) + 's';
+                snowflake.style.animationDelay = Math.random() * 5 + 's';
+                snowflake.style.fontSize = (Math.random() * 0.5 + 0.5) + 'em';
+                snowBg.appendChild(snowflake);
+            }
+        }
+        
+        // Update HUD
+        function updateHUD() {
+            document.getElementById('scoreDisplay').textContent = gameState.score;
+            document.getElementById('boxesDisplay').textContent = `${gameState.boxesCollected}/5`;
+            document.getElementById('levelDisplay').textContent = gameState.level;
+            
+            const livesDisplay = document.getElementById('livesDisplay');
+            livesDisplay.innerHTML = '';
+            for (let i = 0; i < 3; i++) {
+                const life = document.createElement('div');
+                life.className = i < gameState.lives ? 'life' : 'life lost';
+                livesDisplay.appendChild(life);
+            }
+        }
+        
+        // Show notification
+        function showNotification(text) {
+            const notification = document.getElementById('notification');
+            notification.textContent = text;
+            notification.classList.add('show');
+            setTimeout(() => notification.classList.remove('show'), 500);
+        }
+        
+        // Three.js Scene Setup
+        let scene, camera, renderer, player, obstacles = [], boxes = [], targets = [];
+        let playerVelocity = { x: 0, y: 0, z: 0 };
+        let isJumping = false;
+        const JUMP_FORCE = 0.3;
+        const GRAVITY = 0.015;
+        const SPEED_BASE = 0.12;
+        let gameSpeed = SPEED_BASE;
+        
+        function initScene() {
+            scene = new THREE.Scene();
+            scene.fog = new THREE.Fog(0x2d5f7a, 10, 50);
+            
+            // Camera
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 3, 5);
+            camera.lookAt(0, 1, 0);
+            
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setClearColor(0x1a3a52);
+            document.getElementById('gameContainer').appendChild(renderer.domElement);
+            
+            // Lights
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(5, 10, 7);
+            scene.add(directionalLight);
+            
+            // Ground
+            const groundGeometry = new THREE.PlaneGeometry(10, 100);
+            const groundMaterial = new THREE.MeshStandardMaterial({ 
+                color: 0xe0f2ff,
+                roughness: 0.8
+            });
+            const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+            ground.rotation.x = -Math.PI / 2;
+            ground.position.z = -25;
+            scene.add(ground);
+            
+            // Player (skier)
+            const playerGeometry = new THREE.BoxGeometry(0.5, 1, 0.5);
+            const playerMaterial = new THREE.MeshStandardMaterial({ color: 0x3b82f6 });
+            player = new THREE.Mesh(playerGeometry, playerMaterial);
+            player.position.set(0, 0.5, 0);
+            scene.add(player);
+            
+            // Side walls (trees)
+            for (let i = 0; i < 30; i++) {
+                const treeGeometry = new THREE.ConeGeometry(0.5, 2, 8);
+                const treeMaterial = new THREE.MeshStandardMaterial({ color: 0x10b981 });
+                
+                const treeLeft = new THREE.Mesh(treeGeometry, treeMaterial);
+                treeLeft.position.set(-4, 1, -i * 3);
+                scene.add(treeLeft);
+                
+                const treeRight = new THREE.Mesh(treeGeometry, treeMaterial);
+                treeRight.position.set(4, 1, -i * 3);
+                scene.add(treeRight);
+            }
+        }
+        
+        function spawnObstacle() {
+            const obstacleGeometry = new THREE.BoxGeometry(0.8, 0.5, 0.8);
+            const obstacleMaterial = new THREE.MeshStandardMaterial({ color: 0x78716c });
+            const obstacle = new THREE.Mesh(obstacleGeometry, obstacleMaterial);
+            
+            const lanes = [-2, 0, 2];
+            obstacle.position.set(
+                lanes[Math.floor(Math.random() * lanes.length)],
+                0.25,
+                -30
+            );
+            scene.add(obstacle);
+            obstacles.push(obstacle);
+        }
+        
+        function spawnBox() {
+            const boxGeometry = new THREE.BoxGeometry(0.6, 0.6, 0.6);
+            const boxMaterial = new THREE.MeshStandardMaterial({ 
+                color: 0xfbbf24,
+                emissive: 0xfbbf24,
+                emissiveIntensity: 0.3
+            });
+            const box = new THREE.Mesh(boxGeometry, boxMaterial);
+            
+            const lanes = [-2, 0, 2];
+            box.position.set(
+                lanes[Math.floor(Math.random() * lanes.length)],
+                1,
+                -30
+            );
+            scene.add(box);
+            boxes.push(box);
+            
+            // Add rotation animation
+            box.userData.rotation = Math.random() * 0.05 + 0.02;
+        }
+        
+        function updateSkiing() {
+            // Move obstacles and boxes
+            obstacles.forEach((obstacle, index) => {
+                obstacle.position.z += gameSpeed;
+                
+                // Check collision
+                if (Math.abs(obstacle.position.x - player.position.x) < 0.7 &&
+                    Math.abs(obstacle.position.z - player.position.z) < 0.7 &&
+                    player.position.y < 1) {
+                    
+                    // Hit obstacle
+                    scene.remove(obstacle);
+                    obstacles.splice(index, 1);
+                    gameState.obstaclesHit++;
+                    gameState.lives--;
+                    gameState.fatigueLevel++;
+                    playSound('hit');
+                    showNotification('Hit Obstacle!');
+                    updateHUD();
+                    
+                    if (gameState.lives <= 0) {
+                        endRun();
+                    }
+                }
+                
+                // Remove if off screen
+                if (obstacle.position.z > 5) {
+                    scene.remove(obstacle);
+                    obstacles.splice(index, 1);
+                }
+            });
+            
+            boxes.forEach((box, index) => {
+                box.position.z += gameSpeed;
+                box.rotation.y += box.userData.rotation;
+                
+                // Check collection
+                if (Math.abs(box.position.x - player.position.x) < 0.8 &&
+                    Math.abs(box.position.z - player.position.z) < 0.8) {
+                    
+                    scene.remove(box);
+                    boxes.splice(index, 1);
+                    gameState.boxesCollected++;
+                    gameState.score += 100;
+                    playSound('collect');
+                    showNotification('+100 Box Collected!');
+                    updateHUD();
+                    
+                    // Update progress
+                    document.getElementById('progressFill').style.width = 
+                        (gameState.boxesCollected / 5 * 100) + '%';
+                    
+                    if (gameState.boxesCollected >= 5) {
+                        completeSkiingLevel();
+                    }
+                }
+                
+                // Remove if off screen
+                if (box.position.z > 5) {
+                    scene.remove(box);
+                    boxes.splice(index, 1);
+                }
+            });
+            
+            // Jumping physics
+            if (isJumping || player.position.y > 0.5) {
+                playerVelocity.y -= GRAVITY;
+                player.position.y += playerVelocity.y;
+                
+                if (player.position.y <= 0.5) {
+                    player.position.y = 0.5;
+                    playerVelocity.y = 0;
+                    isJumping = false;
+                }
+            }
+        }
+        
+        function completeSkiingLevel() {
+            if (gameState.level < gameState.totalLevels) {
+                gameState.level++;
+                gameState.boxesCollected = 0;
+                gameSpeed += 0.02; // Increase difficulty
+                document.getElementById('progressFill').style.width = '0%';
+                showNotification(`Level ${gameState.level}!`);
+                updateHUD();
+            } else {
+                // All levels complete, transition to shooting
+                transitionToShooting();
+            }
+        }
+        
+        function transitionToShooting() {
+            gameState.mode = 'transition';
+            document.getElementById('instructions').style.display = 'none';
+            
+            const transitionScreen = document.getElementById('transitionScreen');
+            const transitionStats = document.getElementById('transitionStats');
+            
+            transitionStats.innerHTML = `
+                Obstacles Hit: ${gameState.obstaclesHit}<br>
+                Fatigue Level: ${gameState.fatigueLevel > 5 ? 'HIGH' : gameState.fatigueLevel > 2 ? 'MEDIUM' : 'LOW'}
+            `;
+            
+            if (gameState.fatigueLevel > 3) {
+                document.getElementById('fatigueIndicator').classList.add('active');
+            }
+            
+            transitionScreen.classList.add('active');
+        }
+        
+        // Shooting Mode
+        let shootingTimer = 60;
+        let shootingInterval;
+        let targetSpawnInterval;
+        
+        function startShooting() {
+            gameState.mode = 'shooting';
+            document.getElementById('transitionScreen').classList.remove('active');
+            document.getElementById('crosshair').classList.add('active');
+            document.getElementById('timer').classList.add('active');
+            
+            // Clear skiing objects
+            obstacles.forEach(o => scene.remove(o));
+            boxes.forEach(b => scene.remove(b));
+            obstacles = [];
+            boxes = [];
+            
+            // Set camera for first-person shooting
+            camera.position.set(0, 2, 0);
+            camera.lookAt(0, 2, -10);
+            player.visible = false;
+            
+            // Apply fatigue effects
+            const crosshair = document.getElementById('crosshair');
+            if (gameState.fatigueLevel > 3) {
+                crosshair.style.animation = 'crosshairSway 0.8s ease-in-out infinite';
+            } else if (gameState.fatigueLevel > 1) {
+                crosshair.style.animation = 'crosshairSway 1.2s ease-in-out infinite';
+            }
+            
+            // Start timer
+            shootingTimer = 60;
+            updateTimer();
+            shootingInterval = setInterval(() => {
+                shootingTimer--;
+                updateTimer();
+                
+                if (shootingTimer <= 0) {
+                    endShooting();
+                }
+            }, 1000);
+            
+            // Spawn targets
+            const baseSpawnRate = 1000;
+            const fatigueSpeedMultiplier = 1 + (gameState.fatigueLevel * 0.15);
+            const spawnRate = baseSpawnRate / fatigueSpeedMultiplier;
+            
+            targetSpawnInterval = setInterval(spawnTarget, spawnRate);
+        }
+        
+        function updateTimer() {
+            const timerEl = document.getElementById('timer');
+            timerEl.textContent = shootingTimer;
+            
+            if (shootingTimer <= 10) {
+                timerEl.classList.add('warning');
+            }
+        }
+        
+        function spawnTarget() {
+            const isCorrect = Math.random() > 0.3; // 70% correct, 30% incorrect
+            
+            const targetGeometry = new THREE.SphereGeometry(0.4, 16, 16);
+            const targetMaterial = new THREE.MeshStandardMaterial({ 
+                color: isCorrect ? 0x3b82f6 : 0xef4444,
+                emissive: isCorrect ? 0x3b82f6 : 0xef4444,
+                emissiveIntensity: 0.5
+            });
+            const target = new THREE.Mesh(targetGeometry, targetMaterial);
+            
+            target.position.set(
+                (Math.random() - 0.5) * 6,
+                8,
+                -15 + Math.random() * 5
+            );
+            target.userData.isCorrect = isCorrect;
+            target.userData.speed = 0.05 + (gameState.fatigueLevel * 0.01);
+            
+            scene.add(target);
+            targets.push(target);
+        }
+        
+        function updateShooting() {
+            targets.forEach((target, index) => {
+                target.position.y -= target.userData.speed;
+                target.rotation.y += 0.05;
+                
+                // Remove if off screen
+                if (target.position.y < -2) {
+                    scene.remove(target);
+                    targets.splice(index, 1);
+                }
+            });
+        }
+        
+        function shootTarget(event) {
+            if (gameState.mode !== 'shooting') return;
+            
+            const raycaster = new THREE.Raycaster();
+            const mouse = new THREE.Vector2(0, 0); // Center of screen
+            
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(targets);
+            
+            if (intersects.length > 0) {
+                const target = intersects[0].object;
+                const isCorrect = target.userData.isCorrect;
+                
+                scene.remove(target);
+                targets.splice(targets.indexOf(target), 1);
+                
+                gameState.shootingStats.totalShots++;
+                
+                if (isCorrect) {
+                    gameState.shootingStats.correctHits++;
+                    gameState.score += 50;
+                    playSound('correct');
+                    showNotification('+50 Hit!');
+                } else {
+                    gameState.shootingStats.incorrectHits++;
+                    gameState.lives--;
+                    playSound('incorrect');
+                    showNotification('Wrong Target!');
+                    
+                    if (gameState.lives <= 0) {
+                        endShooting();
+                    }
+                }
+                
+                updateHUD();
+            }
+        }
+        
+        function endShooting() {
+            clearInterval(shootingInterval);
+            clearInterval(targetSpawnInterval);
+            
+            // Calculate accuracy
+            if (gameState.shootingStats.totalShots > 0) {
+                gameState.shootingStats.accuracy = 
+                    (gameState.shootingStats.correctHits / gameState.shootingStats.totalShots * 100).toFixed(1);
+            }
+            
+            showSummary();
+        }
+        
+        function endRun() {
+            gameState.mode = 'summary';
+            clearInterval(shootingInterval);
+            clearInterval(targetSpawnInterval);
+            showSummary();
+        }
+        
+        function showSummary() {
+            document.getElementById('crosshair').classList.remove('active');
+            document.getElementById('timer').classList.remove('active');
+            document.getElementById('fatigueIndicator').classList.remove('active');
+            
+            const summaryScreen = document.getElementById('summaryScreen');
+            document.getElementById('finalScore').textContent = gameState.score;
+            document.getElementById('finalAccuracy').textContent = gameState.shootingStats.accuracy + '%';
+            document.getElementById('finalObstacles').textContent = gameState.obstaclesHit;
+            document.getElementById('finalBoxes').textContent = gameState.boxesCollected + gameState.level - 1;
+            
+            // Generate insight
+            let insight = '';
+            if (gameState.obstaclesHit > 3) {
+                insight = `You hit ${gameState.obstaclesHit} obstacles, which increased fatigue and reduced shooting accuracy. Players with fewer than 3 hits average 25% higher accuracy.`;
+            } else if (gameState.shootingStats.accuracy > 80) {
+                insight = `Excellent precision! Your ${gameState.shootingStats.accuracy}% accuracy shows strong pressure management. Clean skiing helped maintain steady aim.`;
+            } else if (gameState.obstaclesHit === 0) {
+                insight = `Perfect skiing run! Zero obstacles hit. This low-fatigue approach gave you optimal shooting conditions.`;
+            } else {
+                insight = `You balanced speed and caution well. Consider the tradeoff: each obstacle costs you both a life and shooting performance.`;
+            }
+            
+            document.getElementById('insightText').textContent = insight;
+            
+            // Send to Snowflake (simulated)
+            logToSnowflake();
+            
+            summaryScreen.classList.add('active');
+        }
+        
+        function logToSnowflake() {
+            const analyticsData = {
+                timestamp: new Date().toISOString(),
+                score: gameState.score,
+                lives_remaining: gameState.lives,
+                obstacles_hit: gameState.obstaclesHit,
+                boxes_collected: gameState.boxesCollected + gameState.level - 1,
+                fatigue_level: gameState.fatigueLevel,
+                shooting_accuracy: gameState.shootingStats.accuracy,
+                correct_hits: gameState.shootingStats.correctHits,
+                incorrect_hits: gameState.shootingStats.incorrectHits,
+                total_shots: gameState.shootingStats.totalShots
+            };
+            
+            console.log('📊 Snowflake Analytics:', analyticsData);
+        }
+        
+        // Animation Loop
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            if (gameState.mode === 'skiing') {
+                updateSkiing();
+            } else if (gameState.mode === 'shooting') {
+                updateShooting();
+            }
+            
+            renderer.render(scene, camera);
+        }
+        
+        // Input Handling
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' && gameState.mode === 'skiing' && !isJumping && player.position.y <= 0.5) {
+                playerVelocity.y = JUMP_FORCE;
+                isJumping = true;
+            }
+        });
+        
+        document.addEventListener('click', shootTarget);
+        
+        // Start Game
+        document.getElementById('startButton').addEventListener('click', () => {
+            document.getElementById('menuScreen').classList.add('hidden');
+            gameState.mode = 'skiing';
+            gameState.startTime = Date.now();
+            updateHUD();
+            
+            // Start spawning
+            setInterval(() => {
+                if (gameState.mode === 'skiing') {
+                    if (Math.random() > 0.3) spawnObstacle();
+                    if (Math.random() > 0.7) spawnBox();
+                }
+            }, 1500);
+        });
+        
+        document.getElementById('continueButton').addEventListener('click', startShooting);
+        
+        document.getElementById('replayButton').addEventListener('click', () => {
+            location.reload();
+        });
+        
+        // Window Resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+        
+        // Initialize
+        createSnow();
+        initScene();
+        animate();
+        updateHUD();
+    </script>
+</body>
+</html>
