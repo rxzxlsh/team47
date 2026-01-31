@@ -1055,14 +1055,15 @@
         
         // Three.js Scene Setup
         let scene, camera, renderer, player, obstacles = [], boxes = [], targets = [];
-        let playerVelocityX = 0; // Horizontal velocity with friction
-        let playerVelocityY = 0; // Vertical velocity (jumping)
+        let trees = [], skiLifts = [], mountains = [];
+        let playerVelocityX = 0;
+        let playerVelocityY = 0;
         let isJumping = false;
         const JUMP_FORCE = 0.3;
         const GRAVITY = 0.015;
-        const ACCELERATION = 0.025; // How fast player accelerates
-        const FRICTION = 0.88; // Friction coefficient (0-1, lower = more friction)
-        const MAX_SPEED = 0.15; // Maximum horizontal speed
+        const ACCELERATION = 0.025;
+        const FRICTION = 0.88;
+        const MAX_SPEED = 0.15;
         const SPEED_BASE = 0.12;
         let gameSpeed = SPEED_BASE;
         
@@ -1070,19 +1071,222 @@
         const LANE_LEFT = -2;
         const LANE_RIGHT = 2;
         
+        // World position tracking (for "you are moving" effect)
+        let worldZ = 0;
+        
+        // Create a proper skier character
+        function createSkier() {
+            const skierGroup = new THREE.Group();
+            
+            // Body (torso) - blue jacket
+            const bodyGeometry = new THREE.BoxGeometry(0.35, 0.5, 0.25);
+            const bodyMaterial = new THREE.MeshStandardMaterial({ color: 0x1e40af });
+            const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+            body.position.y = 0.65;
+            skierGroup.add(body);
+            
+            // Head
+            const headGeometry = new THREE.SphereGeometry(0.12, 16, 16);
+            const headMaterial = new THREE.MeshStandardMaterial({ color: 0xfcd9b6 });
+            const head = new THREE.Mesh(headGeometry, headMaterial);
+            head.position.set(0, 1.0, 0);
+            skierGroup.add(head);
+            
+            // Helmet (red)
+            const helmetGeometry = new THREE.SphereGeometry(0.14, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2);
+            const helmetMaterial = new THREE.MeshStandardMaterial({ color: 0xef4444 });
+            const helmet = new THREE.Mesh(helmetGeometry, helmetMaterial);
+            helmet.position.set(0, 1.05, 0);
+            skierGroup.add(helmet);
+            
+            // Goggles
+            const goggleGeometry = new THREE.BoxGeometry(0.18, 0.05, 0.08);
+            const goggleMaterial = new THREE.MeshStandardMaterial({ color: 0x1f2937 });
+            const goggles = new THREE.Mesh(goggleGeometry, goggleMaterial);
+            goggles.position.set(0, 1.0, 0.1);
+            skierGroup.add(goggles);
+            
+            // Arms
+            const armGeometry = new THREE.BoxGeometry(0.1, 0.35, 0.1);
+            const armMaterial = new THREE.MeshStandardMaterial({ color: 0x1e40af });
+            
+            const leftArm = new THREE.Mesh(armGeometry, armMaterial);
+            leftArm.position.set(-0.25, 0.6, 0.05);
+            leftArm.rotation.x = -0.5;
+            skierGroup.add(leftArm);
+            
+            const rightArm = new THREE.Mesh(armGeometry, armMaterial);
+            rightArm.position.set(0.25, 0.6, 0.05);
+            rightArm.rotation.x = -0.5;
+            skierGroup.add(rightArm);
+            
+            // Ski poles
+            const poleGeometry = new THREE.CylinderGeometry(0.015, 0.015, 0.9, 8);
+            const poleMaterial = new THREE.MeshStandardMaterial({ color: 0x374151 });
+            
+            const leftPole = new THREE.Mesh(poleGeometry, poleMaterial);
+            leftPole.position.set(-0.3, 0.35, 0.15);
+            leftPole.rotation.x = -0.3;
+            skierGroup.add(leftPole);
+            
+            const rightPole = new THREE.Mesh(poleGeometry, poleMaterial);
+            rightPole.position.set(0.3, 0.35, 0.15);
+            rightPole.rotation.x = -0.3;
+            skierGroup.add(rightPole);
+            
+            // Legs (dark pants)
+            const legGeometry = new THREE.BoxGeometry(0.12, 0.35, 0.12);
+            const legMaterial = new THREE.MeshStandardMaterial({ color: 0x1f2937 });
+            
+            const leftLeg = new THREE.Mesh(legGeometry, legMaterial);
+            leftLeg.position.set(-0.1, 0.22, 0);
+            skierGroup.add(leftLeg);
+            
+            const rightLeg = new THREE.Mesh(legGeometry, legMaterial);
+            rightLeg.position.set(0.1, 0.22, 0);
+            skierGroup.add(rightLeg);
+            
+            // Skis (yellow/gold)
+            const skiGeometry = new THREE.BoxGeometry(0.08, 0.02, 1.0);
+            const skiMaterial = new THREE.MeshStandardMaterial({ color: 0xfbbf24 });
+            
+            const leftSki = new THREE.Mesh(skiGeometry, skiMaterial);
+            leftSki.position.set(-0.1, 0.01, 0.1);
+            skierGroup.add(leftSki);
+            
+            const rightSki = new THREE.Mesh(skiGeometry, skiMaterial);
+            rightSki.position.set(0.1, 0.01, 0.1);
+            skierGroup.add(rightSki);
+            
+            return skierGroup;
+        }
+        
+        // Create a snow-covered pine tree
+        function createTree(x, z, scale = 1) {
+            const treeGroup = new THREE.Group();
+            
+            // Trunk
+            const trunkGeometry = new THREE.CylinderGeometry(0.08 * scale, 0.12 * scale, 0.6 * scale, 8);
+            const trunkMaterial = new THREE.MeshStandardMaterial({ color: 0x5c4033 });
+            const trunk = new THREE.Mesh(trunkGeometry, trunkMaterial);
+            trunk.position.y = 0.3 * scale;
+            treeGroup.add(trunk);
+            
+            // Pine layers (green with snow)
+            const foliageMaterial = new THREE.MeshStandardMaterial({ color: 0x228b22 });
+            
+            const layer1 = new THREE.Mesh(new THREE.ConeGeometry(0.5 * scale, 0.6 * scale, 8), foliageMaterial);
+            layer1.position.y = 0.8 * scale;
+            treeGroup.add(layer1);
+            
+            const layer2 = new THREE.Mesh(new THREE.ConeGeometry(0.4 * scale, 0.5 * scale, 8), foliageMaterial);
+            layer2.position.y = 1.2 * scale;
+            treeGroup.add(layer2);
+            
+            const layer3 = new THREE.Mesh(new THREE.ConeGeometry(0.25 * scale, 0.4 * scale, 8), foliageMaterial);
+            layer3.position.y = 1.5 * scale;
+            treeGroup.add(layer3);
+            
+            // Snow on top
+            const snowMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff });
+            const snowCap = new THREE.Mesh(new THREE.ConeGeometry(0.15 * scale, 0.2 * scale, 8), snowMaterial);
+            snowCap.position.y = 1.8 * scale;
+            treeGroup.add(snowCap);
+            
+            treeGroup.position.set(x, 0, z);
+            return treeGroup;
+        }
+        
+        // Create a mountain
+        function createMountain(x, z, scale, color) {
+            const mountainGroup = new THREE.Group();
+            
+            // Main peak
+            const peakGeometry = new THREE.ConeGeometry(12 * scale, 20 * scale, 5);
+            const peakMaterial = new THREE.MeshStandardMaterial({ 
+                color: color,
+                flatShading: true
+            });
+            const peak = new THREE.Mesh(peakGeometry, peakMaterial);
+            peak.position.y = 10 * scale;
+            mountainGroup.add(peak);
+            
+            // Snow cap
+            const snowGeometry = new THREE.ConeGeometry(6 * scale, 6 * scale, 5);
+            const snowMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff });
+            const snowCap = new THREE.Mesh(snowGeometry, snowMaterial);
+            snowCap.position.y = 17 * scale;
+            mountainGroup.add(snowCap);
+            
+            mountainGroup.position.set(x, 0, z);
+            return mountainGroup;
+        }
+        
+        // Create a ski lift
+        function createSkiLift(x, z) {
+            const liftGroup = new THREE.Group();
+            
+            // Pole
+            const poleGeometry = new THREE.CylinderGeometry(0.12, 0.15, 10, 8);
+            const poleMaterial = new THREE.MeshStandardMaterial({ color: 0x4a5568 });
+            const pole = new THREE.Mesh(poleGeometry, poleMaterial);
+            pole.position.y = 5;
+            liftGroup.add(pole);
+            
+            // Cross arm
+            const armGeometry = new THREE.BoxGeometry(3, 0.15, 0.15);
+            const arm = new THREE.Mesh(armGeometry, poleMaterial);
+            arm.position.y = 9.5;
+            liftGroup.add(arm);
+            
+            // Cable
+            const cableGeometry = new THREE.CylinderGeometry(0.02, 0.02, 80, 4);
+            const cableMaterial = new THREE.MeshStandardMaterial({ color: 0x1f2937 });
+            const cable = new THREE.Mesh(cableGeometry, cableMaterial);
+            cable.rotation.z = Math.PI / 2;
+            cable.position.y = 9.5;
+            liftGroup.add(cable);
+            
+            // Chair
+            const chairGroup = new THREE.Group();
+            
+            const seatGeometry = new THREE.BoxGeometry(1.2, 0.08, 0.4);
+            const seatMaterial = new THREE.MeshStandardMaterial({ color: 0xef4444 });
+            const seat = new THREE.Mesh(seatGeometry, seatMaterial);
+            chairGroup.add(seat);
+            
+            const backGeometry = new THREE.BoxGeometry(1.2, 0.6, 0.08);
+            const back = new THREE.Mesh(backGeometry, seatMaterial);
+            back.position.set(0, 0.3, -0.2);
+            chairGroup.add(back);
+            
+            const hangerGeometry = new THREE.CylinderGeometry(0.02, 0.02, 1.2, 8);
+            const hangerMaterial = new THREE.MeshStandardMaterial({ color: 0x374151 });
+            const hanger = new THREE.Mesh(hangerGeometry, hangerMaterial);
+            hanger.position.y = 0.6;
+            chairGroup.add(hanger);
+            
+            chairGroup.position.y = 8;
+            liftGroup.add(chairGroup);
+            liftGroup.userData.chair = chairGroup;
+            
+            liftGroup.position.set(x, 0, z);
+            return liftGroup;
+        }
+        
         function initScene() {
             scene = new THREE.Scene();
-            scene.fog = new THREE.Fog(0x7fa7d8, 20, 60);
+            scene.fog = new THREE.Fog(0x87ceeb, 30, 120);
             
             // Camera
-            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 500);
             camera.position.set(0, 3, 5);
             camera.lookAt(0, 1, 0);
             
             // Renderer
             renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.setClearColor(0x7fa7d8); // Banff sky blue
+            renderer.setClearColor(0x87ceeb); // Sky blue
             document.getElementById('gameContainer').appendChild(renderer.domElement);
             
             // Lights
@@ -1093,65 +1297,71 @@
             directionalLight.position.set(5, 10, 7);
             scene.add(directionalLight);
             
-            // Ground (snow white)
-            const groundGeometry = new THREE.PlaneGeometry(10, 100);
+            // Ground (snow white) - much longer for endless effect
+            const groundGeometry = new THREE.PlaneGeometry(20, 400);
             const groundMaterial = new THREE.MeshStandardMaterial({ 
                 color: 0xffffff,
                 roughness: 0.9
             });
             const ground = new THREE.Mesh(groundGeometry, groundMaterial);
             ground.rotation.x = -Math.PI / 2;
-            ground.position.z = -25;
+            ground.position.z = -175;
             scene.add(ground);
             
-            // Background mountains (Banff style)
-            const mountainColors = [0x5a8cc9, 0x4a7db8, 0x3b6ba6];
-            for (let i = 0; i < 3; i++) {
-                const mountainGeometry = new THREE.ConeGeometry(15 + i * 3, 20 + i * 5, 4);
-                const mountainMaterial = new THREE.MeshStandardMaterial({ 
-                    color: mountainColors[i],
-                    flatShading: true
-                });
-                
-                const mountainLeft = new THREE.Mesh(mountainGeometry, mountainMaterial);
-                mountainLeft.position.set(-25 - i * 5, 8, -40 - i * 10);
-                mountainLeft.rotation.y = Math.PI / 4;
-                scene.add(mountainLeft);
-                
-                const mountainRight = new THREE.Mesh(mountainGeometry, mountainMaterial);
-                mountainRight.position.set(25 + i * 5, 8, -40 - i * 10);
-                mountainRight.rotation.y = -Math.PI / 4;
-                scene.add(mountainRight);
+            // Add ski track marks on snow
+            const trackMaterial = new THREE.MeshStandardMaterial({ color: 0xeeeeee });
+            for (let i = -1; i <= 1; i += 0.5) {
+                const trackGeometry = new THREE.PlaneGeometry(0.05, 400);
+                const track = new THREE.Mesh(trackGeometry, trackMaterial);
+                track.rotation.x = -Math.PI / 2;
+                track.position.set(i, 0.01, -175);
+                scene.add(track);
             }
             
-            // Player (skier)
-            const playerGeometry = new THREE.BoxGeometry(0.5, 1, 0.5);
-            const playerMaterial = new THREE.MeshStandardMaterial({ color: 0x0085c7 }); // Olympic blue
-            player = new THREE.Mesh(playerGeometry, playerMaterial);
-            player.position.set(0, 0.5, 0);
+            // Background mountains
+            const mountainColors = [0x6b7280, 0x4b5563, 0x374151];
+            for (let i = 0; i < 6; i++) {
+                const side = i % 2 === 0 ? -1 : 1;
+                const mountain = createMountain(
+                    side * (40 + Math.random() * 20),
+                    -80 - i * 30,
+                    1.2 + Math.random() * 0.5,
+                    mountainColors[i % mountainColors.length]
+                );
+                mountains.push(mountain);
+                scene.add(mountain);
+            }
+            
+            // Trees along the sides (replacing colored cones)
+            for (let i = 0; i < 50; i++) {
+                const side = i % 2 === 0 ? -1 : 1;
+                const x = side * (4 + Math.random() * 3);
+                const z = -i * 6;
+                const scale = 0.8 + Math.random() * 0.5;
+                const tree = createTree(x, z, scale);
+                tree.userData.baseZ = z;
+                trees.push(tree);
+                scene.add(tree);
+            }
+            
+            // Ski lifts on the left side
+            for (let i = 0; i < 8; i++) {
+                const lift = createSkiLift(-10, -i * 35 - 15);
+                lift.userData.baseZ = -i * 35 - 15;
+                skiLifts.push(lift);
+                scene.add(lift);
+            }
+            
+            // Player (skier character)
+            player = createSkier();
+            player.position.set(0, 0, 0);
             scene.add(player);
-            
-            // Side trees (Olympic ring colors: blue, yellow, black, green, red)
-            const olympicColors = [0x0085c7, 0xfcb131, 0x000000, 0x00a651, 0xee334e];
-            for (let i = 0; i < 30; i++) {
-                const treeGeometry = new THREE.ConeGeometry(0.5, 2, 8);
-                const colorIndex = i % olympicColors.length;
-                const treeMaterial = new THREE.MeshStandardMaterial({ color: olympicColors[colorIndex] });
-                
-                const treeLeft = new THREE.Mesh(treeGeometry, treeMaterial);
-                treeLeft.position.set(-4, 1, -i * 3);
-                scene.add(treeLeft);
-                
-                const treeRight = new THREE.Mesh(treeGeometry, treeMaterial);
-                treeRight.position.set(4, 1, -i * 3);
-                scene.add(treeRight);
-            }
         }
         
         function spawnObstacle() {
-            const obstacleGeometry = new THREE.SphereGeometry(0.5, 16, 16); // Boulder shape
+            const obstacleGeometry = new THREE.SphereGeometry(0.5, 16, 16);
             const obstacleMaterial = new THREE.MeshStandardMaterial({ 
-                color: 0x4a5568, // Rock gray
+                color: 0x4a5568,
                 roughness: 0.9,
                 flatShading: true
             });
@@ -1161,7 +1371,7 @@
             obstacle.position.set(
                 lanes[Math.floor(Math.random() * lanes.length)],
                 0.5,
-                -30
+                worldZ - 40
             );
             obstacle.userData.hit = false;
             obstacle.userData.rotationSpeed = Math.random() * 0.05 + 0.02;
@@ -1173,20 +1383,19 @@
             // Present box
             const boxGeometry = new THREE.BoxGeometry(0.6, 0.6, 0.6);
             const boxMaterial = new THREE.MeshStandardMaterial({ 
-                color: 0xee334e, // Olympic red
+                color: 0xee334e,
                 emissive: 0xee334e,
                 emissiveIntensity: 0.3
             });
             const box = new THREE.Mesh(boxGeometry, boxMaterial);
             
-            // Ribbon (cross on top)
+            // Ribbon
             const ribbonMaterial = new THREE.MeshStandardMaterial({ 
-                color: 0xfcb131, // Olympic gold
+                color: 0xfcb131,
                 emissive: 0xfcb131,
                 emissiveIntensity: 0.4
             });
             
-            // Horizontal ribbon
             const ribbonH = new THREE.Mesh(
                 new THREE.BoxGeometry(0.7, 0.1, 0.1),
                 ribbonMaterial
@@ -1194,7 +1403,6 @@
             ribbonH.position.y = 0.3;
             box.add(ribbonH);
             
-            // Vertical ribbon
             const ribbonV = new THREE.Mesh(
                 new THREE.BoxGeometry(0.1, 0.7, 0.1),
                 ribbonMaterial
@@ -1206,27 +1414,28 @@
             box.position.set(
                 lanes[Math.floor(Math.random() * lanes.length)],
                 1,
-                -30
+                worldZ - 40
             );
             box.userData.rotation = Math.random() * 0.05 + 0.02;
             box.userData.collected = false;
+            box.userData.baseY = 1;
             scene.add(box);
             boxes.push(box);
         }
         
         function updateSkiing() {
+            // Update world position (player moving forward into the world)
+            worldZ -= gameSpeed;
+            
             // Apply friction to horizontal velocity
             playerVelocityX *= FRICTION;
             
-            // Clamp horizontal velocity
             if (Math.abs(playerVelocityX) < 0.001) playerVelocityX = 0;
             if (playerVelocityX > MAX_SPEED) playerVelocityX = MAX_SPEED;
             if (playerVelocityX < -MAX_SPEED) playerVelocityX = -MAX_SPEED;
             
-            // Update player X position with velocity
             player.position.x += playerVelocityX;
             
-            // Constrain to lane boundaries
             if (player.position.x < LANE_LEFT) {
                 player.position.x = LANE_LEFT;
                 playerVelocityX = 0;
@@ -1236,10 +1445,11 @@
                 playerVelocityX = 0;
             }
             
-            // Add slight tilt based on velocity
+            // Tilt skier based on movement
             player.rotation.z = -playerVelocityX * 2;
+            player.rotation.y = -playerVelocityX * 0.3;
             
-            // Move obstacles and boxes
+            // Move obstacles toward player (creates "you are moving" effect)
             obstacles.forEach((obstacle, index) => {
                 obstacle.position.z += gameSpeed;
                 obstacle.rotation.x += obstacle.userData.rotationSpeed;
@@ -1253,7 +1463,6 @@
                     
                     obstacle.userData.hit = true;
                     
-                    // Animate obstacle hit
                     const startScale = obstacle.scale.clone();
                     let animTime = 0;
                     const animDuration = 0.3;
@@ -1283,7 +1492,6 @@
                     showNotification('Hit Obstacle!');
                     updateHUD();
                     
-                    // Screen shake effect
                     camera.position.x = Math.random() * 0.2 - 0.1;
                     setTimeout(() => camera.position.x = 0, 100);
                     
@@ -1292,42 +1500,32 @@
                     }
                 }
                 
-                // Remove if off screen
                 if (obstacle.position.z > 5) {
                     scene.remove(obstacle);
                     obstacles.splice(index, 1);
                 }
             });
             
-            // Use reverse loop to prevent index issues when removing items
+            // Move boxes toward player
             for (let i = boxes.length - 1; i >= 0; i--) {
                 const box = boxes[i];
                 box.position.z += gameSpeed;
                 box.rotation.y += box.userData.rotation;
+                box.position.y = box.userData.baseY + Math.sin(Date.now() * 0.003 + i) * 0.1;
                 
-                // Floating animation
-                box.position.y = 1 + Math.sin(Date.now() * 0.003 + i) * 0.1;
-                
-                // Check collection
                 if (!box.userData.collected &&
                     Math.abs(box.position.x - player.position.x) < 0.8 &&
                     Math.abs(box.position.z - player.position.z) < 0.8) {
                     
                     box.userData.collected = true;
                     
-                    // Particle effect at box position
                     const screenPos = box.position.clone().project(camera);
                     const x = (screenPos.x + 1) / 2 * window.innerWidth;
                     const y = (-screenPos.y + 1) / 2 * window.innerHeight;
-                    createParticleBurst(x, y, '#ee334e'); // Red present color
+                    createParticleBurst(x, y, '#ee334e');
                     
-                    // Animate box collection with smoother disappearance
-                    const startY = box.position.y;
-                    const startTime = Date.now();
-                    const animDuration = 600; // Smoother, longer animation
-                    
-                    box.userData.animationStartTime = startTime;
-                    box.userData.startY = startY;
+                    box.userData.animationStartTime = Date.now();
+                    box.userData.startY = box.position.y;
                     box.userData.isAnimating = true;
                     
                     gameState.boxesCollected++;
@@ -1336,7 +1534,6 @@
                     showNotification('+100 Present Collected!');
                     updateHUD();
                     
-                    // Update progress with smooth animation
                     document.getElementById('progressFill').style.width = 
                         (gameState.boxesCollected / 5 * 100) + '%';
                     
@@ -1345,11 +1542,10 @@
                     }
                 }
                 
-                // Animate collected boxes
                 if (box.userData.isAnimating) {
                     const elapsed = Date.now() - box.userData.animationStartTime;
                     const progress = Math.min(elapsed / 600, 1);
-                    const easeOut = 1 - Math.pow(1 - progress, 3); // Cubic ease-out
+                    const easeOut = 1 - Math.pow(1 - progress, 3);
                     
                     if (progress >= 1) {
                         scene.remove(box);
@@ -1365,36 +1561,56 @@
                     }
                 }
                 
-                // Remove if off screen
                 if (box.position.z > 5 && !box.userData.isAnimating) {
                     scene.remove(box);
                     boxes.splice(i, 1);
                 }
             }
             
+            // Move trees toward player (creates endless forest effect)
+            trees.forEach(tree => {
+                tree.position.z += gameSpeed;
+                if (tree.position.z > 10) {
+                    tree.position.z -= 300;
+                }
+            });
+            
+            // Move ski lifts toward player
+            skiLifts.forEach(lift => {
+                lift.position.z += gameSpeed;
+                if (lift.position.z > 20) {
+                    lift.position.z -= 280;
+                }
+                // Sway the chair slightly
+                if (lift.userData.chair) {
+                    lift.userData.chair.rotation.z = Math.sin(Date.now() * 0.002) * 0.05;
+                }
+            });
+            
             // Jumping physics
-            if (isJumping || player.position.y > 0.5) {
+            if (isJumping || player.position.y > 0) {
                 playerVelocityY -= GRAVITY;
                 player.position.y += playerVelocityY;
                 
-                if (player.position.y <= 0.5) {
-                    player.position.y = 0.5;
+                if (player.position.y <= 0) {
+                    player.position.y = 0;
                     playerVelocityY = 0;
                     isJumping = false;
                 }
             }
+            
+            // Camera follows player
+            camera.position.x = player.position.x * 0.3;
+            camera.lookAt(player.position.x * 0.5, 1, -5);
         }
         
         function completeSkiingLevel() {
             if (gameState.level < gameState.totalLevels) {
                 gameState.level++;
                 gameState.boxesCollected = 0;
-                gameSpeed += 0.035; // Faster speed increase
+                gameSpeed += 0.035;
                 document.getElementById('progressFill').style.width = '0%';
-                
-                // Smoother level up notification
                 showNotification(`🎉 Level ${gameState.level} Complete!`);
-                
                 updateHUD();
             } else {
                 transitionToShooting();
@@ -1430,42 +1646,35 @@
             document.getElementById('transitionScreen').classList.remove('active');
             document.getElementById('crosshair').classList.add('active');
             
-            // Show shooting instructions
             const instructions = document.getElementById('instructions');
             instructions.innerHTML = 'Move Mouse to Aim • Click: Shoot • 🔵 Blue = Correct • 🔴 Red = Wrong';
             instructions.style.display = 'block';
             
-            // Apply fatigue to crosshair
             if (gameState.fatigueLevel > 3) {
                 document.getElementById('crosshair').classList.add('shooting');
             }
             
             document.getElementById('timer').classList.add('active');
             
-            // Clear skiing objects
             obstacles.forEach(o => scene.remove(o));
             boxes.forEach(b => scene.remove(b));
             obstacles = [];
             boxes = [];
             
-            // Set camera for first-person shooting
             camera.position.set(0, 2, 0);
             camera.lookAt(0, 2, -10);
             player.visible = false;
             
-            // Start timer
             shootingTimer = 60;
             updateTimer();
             shootingInterval = setInterval(() => {
                 shootingTimer--;
                 updateTimer();
-                
                 if (shootingTimer <= 0) {
                     endShooting();
                 }
             }, 1000);
             
-            // Spawn targets
             const baseSpawnRate = 1000;
             const fatigueSpeedMultiplier = 1 + (gameState.fatigueLevel * 0.15);
             const spawnRate = baseSpawnRate / fatigueSpeedMultiplier;
@@ -1476,7 +1685,6 @@
         function updateTimer() {
             const timerEl = document.getElementById('timer');
             timerEl.textContent = shootingTimer;
-            
             if (shootingTimer <= 10) {
                 timerEl.classList.add('warning');
             }
@@ -1511,11 +1719,9 @@
                 target.position.y -= target.userData.speed;
                 target.rotation.y += 0.05;
                 
-                // Pulse animation
                 const scale = 1 + Math.sin(Date.now() * 0.005 + index) * 0.1;
                 target.scale.set(scale, scale, scale);
                 
-                // Remove if off screen
                 if (target.position.y < -2) {
                     scene.remove(target);
                     targets.splice(index, 1);
@@ -1543,10 +1749,8 @@
                 target.userData.hit = true;
                 const isCorrect = target.userData.isCorrect;
                 
-                // Particle effect
                 createParticleBurst(mouseX, mouseY, isCorrect ? '#3b82f6' : '#ef4444');
                 
-                // Animate target destruction
                 let animTime = 0;
                 const animDuration = 0.3;
                 
@@ -1559,11 +1763,7 @@
                         targets.splice(targets.indexOf(target), 1);
                         clearInterval(destroyAnim);
                     } else {
-                        target.scale.set(
-                            1 - progress,
-                            1 - progress,
-                            1 - progress
-                        );
+                        target.scale.set(1 - progress, 1 - progress, 1 - progress);
                         target.rotation.x += 0.3;
                         target.rotation.z += 0.2;
                     }
@@ -1700,7 +1900,7 @@
             keysPressed[e.code] = true;
             
             if (gameState.mode === 'skiing') {
-                if (e.code === 'Space' && !isJumping && player.position.y <= 0.5) {
+                if (e.code === 'Space' && !isJumping && player.position.y <= 0) {
                     playerVelocityY = JUMP_FORCE;
                     isJumping = true;
                 }
@@ -1711,7 +1911,6 @@
             keysPressed[e.code] = false;
         });
         
-        // Continuous movement with friction
         function updatePlayerMovement() {
             if (gameState.mode !== 'skiing' || isPaused) return;
             
@@ -1725,7 +1924,6 @@
         
         setInterval(updatePlayerMovement, 16);
         
-        // Mouse tracking for crosshair
         document.addEventListener('mousemove', (e) => {
             mouseX = e.clientX;
             mouseY = e.clientY;
@@ -1737,7 +1935,6 @@
         
         document.addEventListener('click', shootTarget);
         
-        // Start Game with smooth countdown
         document.getElementById('startButton').addEventListener('click', () => {
             document.getElementById('menuScreen').classList.add('hidden');
             
@@ -1765,7 +1962,6 @@
                         
                         setInterval(() => {
                             if (gameState.mode === 'skiing') {
-                                // More obstacles as levels increase
                                 const obstacleChance = 0.3 - (gameState.level * 0.05);
                                 if (Math.random() > obstacleChance) spawnObstacle();
                                 if (Math.random() > 0.7) spawnBox();
