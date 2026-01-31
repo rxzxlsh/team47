@@ -1247,29 +1247,69 @@
         }
         
         // Input Handling
-        document.addEventListener('keydown', (e) => {
-            if (e.code === 'Space' && gameState.mode === 'skiing' && !isJumping && player.position.y <= 0.5) {
-                playerVelocity.y = JUMP_FORCE;
-                isJumping = true;
-            }
-        });
+const lanes = [-2, 0, 2]; // Left, Center, Right
+let currentLane = 1; // Start in center
+
+document.addEventListener('keydown', (e) => {
+    if (gameState.mode === 'skiing') {
+        // Jump
+        if (e.code === 'Space' && !isJumping && player.position.y <= 0.5) {
+            playerVelocity.y = JUMP_FORCE;
+            isJumping = true;
+        }
+        
+        // Move Left
+        if (e.code === 'ArrowLeft' && currentLane > 0) {
+            currentLane--;
+            player.position.x = lanes[currentLane];
+            playSound('collect'); // Quick audio feedback
+        }
+        
+        // Move Right
+        if (e.code === 'ArrowRight' && currentLane < 2) {
+            currentLane++;
+            player.position.x = lanes[currentLane];
+            playSound('collect'); // Quick audio feedback
+        }
+    }
+});
         
         document.addEventListener('click', shootTarget);
         
         // Start Game
         document.getElementById('startButton').addEventListener('click', () => {
             document.getElementById('menuScreen').classList.add('hidden');
-            gameState.mode = 'skiing';
-            gameState.startTime = Date.now();
-            updateHUD();
             
-            // Start spawning
-            setInterval(() => {
-                if (gameState.mode === 'skiing') {
-                    if (Math.random() > 0.3) spawnObstacle();
-                    if (Math.random() > 0.7) spawnBox();
+            // Show countdown
+            const notification = document.getElementById('notification');
+            let countdown = 3;
+            
+            const countdownInterval = setInterval(() => {
+                if (countdown > 0) {
+                    notification.textContent = countdown;
+                    notification.classList.add('show');
+                    setTimeout(() => notification.classList.remove('show'), 900);
+                    countdown--;
+                } else {
+                    notification.textContent = 'GO!';
+                    notification.classList.add('show');
+                    setTimeout(() => notification.classList.remove('show'), 500);
+                    clearInterval(countdownInterval);
+                    
+                    // Actually start game
+                    gameState.mode = 'skiing';
+                    gameState.startTime = Date.now();
+                    updateHUD();
+                    
+                    // Start spawning
+                    setInterval(() => {
+                        if (gameState.mode === 'skiing') {
+                            if (Math.random() > 0.3) spawnObstacle();
+                            if (Math.random() > 0.7) spawnBox();
+                        }
+                    }, 1500);
                 }
-            }, 1500);
+            }, 1000);
         });
         
         document.getElementById('continueButton').addEventListener('click', startShooting);
@@ -1290,6 +1330,9 @@
         initScene();
         animate();
         updateHUD();
+
+        
+    
     </script>
 </body>
 </html>

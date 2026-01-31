@@ -4,11 +4,16 @@ import sys
 
 # Initialize pygame
 pygame.init()
+
+
 WIDTH, HEIGHT = 800, 600
 WIN = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Frozen Split: Biathlon Challenge")
 CLOCK = pygame.time.Clock()
+
 FONT = pygame.font.SysFont('Arial', 24)
+BIG_FONT = pygame.font.SysFont('Arial', 40)
+
 
 # Colors
 WHITE = (255, 255, 255)
@@ -45,6 +50,60 @@ last_spawn = 0
 
 # Game state
 mode = "skiing"
+
+# --- Skiing Variables ---
+player = pygame.Rect(100, 500, 50, 50)
+y_velocity = 0
+jumping = False
+gravity = 0.8
+obstacles = [pygame.Rect(random.randint(300, WIDTH), 500, 50, 50) for _ in range(5)]
+boxes = [pygame.Rect(random.randint(300, WIDTH), 500, 30, 30) for _ in range(5)]
+lives = 3
+boxes_collected = 0
+speed = 5
+
+# --- Shooting Variables ---
+targets = []
+score = 0
+shooting_lives = 3
+fatigue = 0
+shoot_timer = 60
+last_spawn = 0
+
+def draw_start_screen():
+    WIN.fill(WHITE)
+    title = BIG_FONT.render("Frozen Split: Biathlon Challenge", True, BLUE)
+    start = FONT.render("Press ENTER to Start", True, BLACK)
+    instr = FONT.render("Press I for Instructions", True, BLACK)
+
+    WIN.blit(title, (WIDTH//2 - title.get_width()//2, 200))
+    WIN.blit(start, (WIDTH//2 - start.get_width()//2, 280))
+    WIN.blit(instr, (WIDTH//2 - instr.get_width()//2, 320))
+    pygame.display.update()
+
+
+def draw_instructions():
+    WIN.fill(WHITE)
+    lines = [
+        "INSTRUCTIONS",
+        "",
+        "SKIING PHASE:",
+        "- Press SPACE to jump",
+        "- Avoid red obstacles",
+        "- Collect 5 yellow boxes",
+        "",
+        "SHOOTING PHASE:",
+        "- Click BLUE targets",
+        "- Fatigue increases difficulty",
+        "",
+        "Press B to go back"
+    ]
+
+    for i, line in enumerate(lines):
+        text = FONT.render(line, True, BLACK)
+        WIN.blit(text, (100, 100 + i * 30))
+    pygame.display.update()
+
 
 def draw_skiing():
     WIN.fill(WHITE)
@@ -152,6 +211,17 @@ def shooting_update(dt):
     if shoot_timer <= 0 or shooting_lives <= 0:
         return True
     return False
+
+def restart_game():
+    global mode, lives, boxes_collected, fatigue, score, shooting_lives, shoot_timer, targets
+    lives = 3
+    boxes_collected = 0
+    fatigue = 0
+    score = 0
+    shooting_lives = 3
+    shoot_timer = 60
+    targets = []
+    mode = "start"
 
 def main():
     global mode, fatigue
