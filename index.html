@@ -15,10 +15,18 @@
         
         body {
             font-family: 'Rajdhani', sans-serif;
-            background: linear-gradient(135deg, #0a1929 0%, #1a3a52 50%, #2d5f7a 100%);
+            background: linear-gradient(180deg, 
+                #1e3a5f 0%,
+                #2c5282 20%,
+                #3b6ba6 40%,
+                #5a8cc9 60%,
+                #7fa7d8 80%,
+                #c9ddf5 100%
+            );
             color: #e0f2ff;
             overflow: hidden;
             position: relative;
+            cursor: none;
         }
         
         /* Animated snow background */
@@ -131,17 +139,24 @@
             border-radius: 50%;
             box-shadow: 0 0 15px rgba(239, 68, 68, 0.6);
             animation: pulse 2s ease-in-out infinite;
+            transition: all 0.3s ease;
         }
         
         .life.lost {
             background: rgba(100, 100, 100, 0.3);
             box-shadow: none;
-            animation: none;
+            animation: lostLife 0.5s ease;
         }
         
         @keyframes pulse {
             0%, 100% { transform: scale(1); }
             50% { transform: scale(1.1); }
+        }
+        
+        @keyframes lostLife {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.5); opacity: 0.5; }
+            100% { transform: scale(1); opacity: 1; }
         }
         
         /* Progress Bar */
@@ -161,7 +176,7 @@
         .progress-fill {
             height: 100%;
             background: linear-gradient(90deg, #60a5fa 0%, #3b82f6 100%);
-            transition: width 0.3s ease;
+            transition: width 0.5s cubic-bezier(0.4, 0.0, 0.2, 1);
             box-shadow: 0 0 20px rgba(96, 165, 250, 0.8);
         }
         
@@ -193,13 +208,20 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(135deg, rgba(10, 25, 41, 0.95) 0%, rgba(26, 58, 82, 0.95) 100%);
+            background: linear-gradient(180deg, 
+                rgba(30, 58, 95, 0.97) 0%,
+                rgba(44, 82, 130, 0.97) 30%,
+                rgba(59, 107, 166, 0.97) 60%,
+                rgba(90, 140, 201, 0.95) 100%
+            );
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             z-index: 100;
             pointer-events: all;
+            cursor: auto;
+            backdrop-filter: blur(5px);
         }
         
         .menu-screen.hidden {
@@ -208,28 +230,29 @@
         
         .game-title {
             font-family: 'Orbitron', sans-serif;
-            font-size: 72px;
+            font-size: 80px;
             font-weight: 900;
-            background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 50%, #2563eb 100%);
+            background: linear-gradient(135deg, #fcb131 0%, #ee334e 50%, #0085c7 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-            text-shadow: 0 0 40px rgba(96, 165, 250, 0.5);
+            text-shadow: 0 0 60px rgba(252, 177, 49, 0.5);
             margin-bottom: 10px;
             animation: titleGlow 3s ease-in-out infinite;
         }
         
         @keyframes titleGlow {
-            0%, 100% { filter: brightness(1); }
-            50% { filter: brightness(1.3); }
+            0%, 100% { filter: brightness(1) drop-shadow(0 0 20px rgba(252, 177, 49, 0.3)); }
+            50% { filter: brightness(1.4) drop-shadow(0 0 40px rgba(252, 177, 49, 0.6)); }
         }
         
         .game-subtitle {
-            font-size: 24px;
-            color: #60a5fa;
+            font-size: 28px;
+            color: #fcb131;
             margin-bottom: 50px;
-            letter-spacing: 4px;
+            letter-spacing: 6px;
             text-transform: uppercase;
+            text-shadow: 0 0 20px rgba(252, 177, 49, 0.4);
         }
         
         .start-button {
@@ -237,13 +260,13 @@
             font-size: 24px;
             font-family: 'Orbitron', sans-serif;
             font-weight: 700;
-            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-            color: white;
+            background: linear-gradient(135deg, #fcb131 0%, #f59e0b 100%);
+            color: #1e3a5f;
             border: none;
             border-radius: 12px;
             cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 10px 40px rgba(59, 130, 246, 0.4);
+            box-shadow: 0 10px 40px rgba(252, 177, 49, 0.4);
             pointer-events: all;
             text-transform: uppercase;
             letter-spacing: 2px;
@@ -251,7 +274,8 @@
         
         .start-button:hover {
             transform: translateY(-5px) scale(1.05);
-            box-shadow: 0 15px 50px rgba(59, 130, 246, 0.6);
+            box-shadow: 0 15px 50px rgba(252, 177, 49, 0.6);
+            background: linear-gradient(135deg, #fcd34d 0%, #fcb131 100%);
         }
         
         .start-button:active {
@@ -261,35 +285,40 @@
         .game-info {
             margin-top: 40px;
             text-align: center;
-            max-width: 600px;
+            max-width: 650px;
             line-height: 1.8;
-            color: #93c5fd;
-            font-size: 16px;
+            color: #e0f2ff;
+            font-size: 17px;
+            background: rgba(30, 58, 95, 0.4);
+            padding: 25px 35px;
+            border-radius: 15px;
+            border: 2px solid rgba(252, 177, 49, 0.3);
         }
         
         /* Crosshair */
         .crosshair {
             position: fixed;
-            top: 50%;
-            left: 50%;
             width: 40px;
             height: 40px;
-            transform: translate(-50%, -50%);
             pointer-events: none;
             z-index: 50;
             display: none;
+            transition: transform 0.05s linear;
         }
         
         .crosshair.active {
             display: block;
+        }
+        
+        .crosshair.shooting {
             animation: crosshairSway 1s ease-in-out infinite;
         }
         
         @keyframes crosshairSway {
-            0%, 100% { transform: translate(-50%, -50%) translate(0, 0); }
-            25% { transform: translate(-50%, -50%) translate(2px, 2px); }
-            50% { transform: translate(-50%, -50%) translate(-2px, 0); }
-            75% { transform: translate(-50%, -50%) translate(0, -2px); }
+            0%, 100% { transform: translate(0, 0); }
+            25% { transform: translate(3px, 3px); }
+            50% { transform: translate(-3px, 0); }
+            75% { transform: translate(0, -3px); }
         }
         
         .crosshair-line {
@@ -363,7 +392,11 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(135deg, rgba(10, 25, 41, 0.98) 0%, rgba(26, 58, 82, 0.98) 100%);
+            background: linear-gradient(180deg, 
+                rgba(30, 58, 95, 0.98) 0%,
+                rgba(44, 82, 130, 0.98) 50%,
+                rgba(59, 107, 166, 0.96) 100%
+            );
             display: none;
             flex-direction: column;
             align-items: center;
@@ -372,6 +405,7 @@
             pointer-events: all;
             padding: 40px;
             overflow-y: auto;
+            cursor: auto;
         }
         
         .summary-screen.active {
@@ -383,10 +417,11 @@
             font-family: 'Orbitron', sans-serif;
             font-size: 48px;
             font-weight: 900;
-            color: #60a5fa;
+            color: #fcb131;
             margin-bottom: 30px;
             text-transform: uppercase;
             letter-spacing: 3px;
+            text-shadow: 0 0 30px rgba(252, 177, 49, 0.5);
         }
         
         .summary-grid {
@@ -471,20 +506,21 @@
             font-size: 18px;
             font-family: 'Orbitron', sans-serif;
             font-weight: 700;
-            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-            color: white;
+            background: linear-gradient(135deg, #fcb131 0%, #f59e0b 100%);
+            color: #1e3a5f;
             border: none;
             border-radius: 12px;
             cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 8px 30px rgba(59, 130, 246, 0.4);
+            box-shadow: 0 8px 30px rgba(252, 177, 49, 0.4);
             text-transform: uppercase;
             letter-spacing: 2px;
         }
         
         .replay-button:hover {
             transform: translateY(-3px);
-            box-shadow: 0 12px 40px rgba(59, 130, 246, 0.6);
+            box-shadow: 0 12px 40px rgba(252, 177, 49, 0.6);
+            background: linear-gradient(135deg, #fcd34d 0%, #fcb131 100%);
         }
         
         /* Transition Screen */
@@ -494,13 +530,18 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(135deg, rgba(10, 25, 41, 0.95) 0%, rgba(26, 58, 82, 0.95) 100%);
+            background: linear-gradient(180deg, 
+                rgba(30, 58, 95, 0.97) 0%,
+                rgba(44, 82, 130, 0.97) 50%,
+                rgba(59, 107, 166, 0.95) 100%
+            );
             display: none;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             z-index: 90;
             pointer-events: all;
+            cursor: auto;
         }
         
         .transition-screen.active {
@@ -512,9 +553,10 @@
             font-family: 'Orbitron', sans-serif;
             font-size: 56px;
             font-weight: 900;
-            color: #60a5fa;
+            color: #fcb131;
             margin-bottom: 20px;
             animation: scaleIn 0.5s ease;
+            text-shadow: 0 0 30px rgba(252, 177, 49, 0.5);
         }
         
         @keyframes scaleIn {
@@ -577,7 +619,7 @@
         }
         
         .notification.show {
-            animation: notificationPop 0.5s ease;
+            animation: notificationPop 2s cubic-bezier(0.4, 0.0, 0.2, 1);
         }
         
         @keyframes notificationPop {
@@ -585,12 +627,56 @@
                 transform: translate(-50%, -50%) scale(0);
                 opacity: 0;
             }
-            50% {
-                transform: translate(-50%, -50%) scale(1.1);
+            10% {
+                transform: translate(-50%, -50%) scale(1.15);
+                opacity: 1;
+            }
+            15% {
+                transform: translate(-50%, -50%) scale(1);
+            }
+            85% {
+                transform: translate(-50%, -50%) scale(1);
                 opacity: 1;
             }
             100% {
                 transform: translate(-50%, -50%) scale(0);
+                opacity: 0;
+            }
+        }
+        
+        /* Countdown */
+        .countdown {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 180px;
+            font-weight: 900;
+            color: #60a5fa;
+            z-index: 200;
+            pointer-events: none;
+            text-shadow: 0 0 60px rgba(96, 165, 250, 0.8);
+        }
+        
+        .countdown.show {
+            animation: countdownPop 1.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        
+        @keyframes countdownPop {
+            0% {
+                transform: translate(-50%, -50%) scale(0) rotate(-10deg);
+                opacity: 0;
+            }
+            20% {
+                transform: translate(-50%, -50%) scale(1.3) rotate(5deg);
+                opacity: 1;
+            }
+            40% {
+                transform: translate(-50%, -50%) scale(1) rotate(0deg);
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(0.8);
                 opacity: 0;
             }
         }
@@ -615,6 +701,111 @@
         .fatigue-indicator.active {
             display: block;
         }
+        
+        /* Pause Menu */
+        .pause-menu {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            background: linear-gradient(135deg, rgba(10, 25, 41, 0.98) 0%, rgba(26, 58, 82, 0.98) 100%);
+            padding: 40px 60px;
+            border-radius: 20px;
+            border: 3px solid rgba(96, 165, 250, 0.5);
+            z-index: 150;
+            pointer-events: none;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+        }
+        
+        .pause-menu.active {
+            transform: translate(-50%, -50%) scale(1);
+            pointer-events: all;
+            animation: menuPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        
+        @keyframes menuPop {
+            0% {
+                transform: translate(-50%, -50%) scale(0);
+                opacity: 0;
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 1;
+            }
+        }
+        
+        .pause-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 48px;
+            font-weight: 900;
+            color: #60a5fa;
+            margin-bottom: 30px;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+        
+        .pause-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .pause-btn {
+            padding: 15px 40px;
+            font-size: 18px;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        .pause-btn.resume {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            box-shadow: 0 8px 30px rgba(16, 185, 129, 0.4);
+        }
+        
+        .pause-btn.resume:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 40px rgba(16, 185, 129, 0.6);
+        }
+        
+        .pause-btn.quit {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            box-shadow: 0 8px 30px rgba(239, 68, 68, 0.4);
+        }
+        
+        .pause-btn.quit:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 40px rgba(239, 68, 68, 0.6);
+        }
+        
+        /* Collection particle effect */
+        .particle {
+            position: fixed;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 100;
+        }
+        
+        @keyframes particleBurst {
+            0% {
+                transform: translate(0, 0) scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(var(--tx), var(--ty)) scale(0);
+                opacity: 0;
+            }
+        }
     </style>
 </head>
 <body>
@@ -627,7 +818,7 @@
         <div class="game-subtitle">A Biathlon Challenge</div>
         <button class="start-button" id="startButton">Start Run</button>
         <div class="game-info">
-            Balance speed and precision in this Olympic-inspired biathlon. Navigate snowy terrain, collect boxes, then prove your shooting accuracy. Every mistake increases fatigue and makes shooting harder. Can you handle the pressure?
+            Welcome to the ultimate Olympic-inspired biathlon challenge set in the stunning mountains of Banff! Navigate snowy terrain with <strong>friction-based sliding controls</strong>, dodge boulders, and collect presents to advance through 3 increasingly challenging levels. Then test your precision in the shooting range with a <strong>movable crosshair</strong>—remember: <strong style="color: #0085c7;">🔵 Blue targets are GOOD</strong>, <strong style="color: #ee334e;">🔴 Red targets are BAD</strong>. Every obstacle hit increases fatigue, making your aim shakier. Can you earn Olympic gold?
         </div>
     </div>
     
@@ -660,7 +851,7 @@
         </div>
         
         <div class="instructions" id="instructions">
-            Press SPACEBAR to jump over obstacles
+            Arrow Keys: Slide Left/Right • SPACEBAR: Jump • ESC: Pause
         </div>
         
         <div class="timer" id="timer">60</div>
@@ -717,11 +908,23 @@
     <!-- Notification -->
     <div class="notification" id="notification"></div>
     
+    <!-- Countdown -->
+    <div class="countdown" id="countdown"></div>
+    
+    <!-- Pause Menu -->
+    <div class="pause-menu" id="pauseMenu">
+        <div class="pause-title">⏸️ PAUSED</div>
+        <div class="pause-buttons">
+            <button class="pause-btn resume" id="resumeBtn">Resume (ESC)</button>
+            <button class="pause-btn quit" id="quitBtn">Quit to Menu</button>
+        </div>
+    </div>
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
         // Game State
         const gameState = {
-            mode: 'menu', // menu, skiing, shooting, summary
+            mode: 'menu',
             score: 0,
             lives: 3,
             boxesCollected: 0,
@@ -738,6 +941,10 @@
             startTime: 0,
             levelTimes: []
         };
+        
+        // Mouse position for crosshair
+        let mouseX = window.innerWidth / 2;
+        let mouseY = window.innerHeight / 2;
         
         // Audio Context
         const audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -782,6 +989,31 @@
             }
         }
         
+        // Create particle burst effect
+        function createParticleBurst(x, y, color) {
+            const particleCount = 12;
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = x + 'px';
+                particle.style.top = y + 'px';
+                particle.style.background = color;
+                
+                const angle = (Math.PI * 2 * i) / particleCount;
+                const distance = 50 + Math.random() * 50;
+                const tx = Math.cos(angle) * distance;
+                const ty = Math.sin(angle) * distance;
+                
+                particle.style.setProperty('--tx', tx + 'px');
+                particle.style.setProperty('--ty', ty + 'px');
+                particle.style.animation = 'particleBurst 0.8s ease-out forwards';
+                
+                document.body.appendChild(particle);
+                
+                setTimeout(() => particle.remove(), 800);
+            }
+        }
+        
         // Create snow animation
         function createSnow() {
             const snowBg = document.getElementById('snowBg');
@@ -816,22 +1048,31 @@
         function showNotification(text) {
             const notification = document.getElementById('notification');
             notification.textContent = text;
+            notification.classList.remove('show');
+            void notification.offsetWidth; // Force reflow
             notification.classList.add('show');
-            setTimeout(() => notification.classList.remove('show'), 500);
         }
         
         // Three.js Scene Setup
         let scene, camera, renderer, player, obstacles = [], boxes = [], targets = [];
-        let playerVelocity = { x: 0, y: 0, z: 0 };
+        let playerVelocityX = 0; // Horizontal velocity with friction
+        let playerVelocityY = 0; // Vertical velocity (jumping)
         let isJumping = false;
         const JUMP_FORCE = 0.3;
         const GRAVITY = 0.015;
+        const ACCELERATION = 0.025; // How fast player accelerates
+        const FRICTION = 0.88; // Friction coefficient (0-1, lower = more friction)
+        const MAX_SPEED = 0.15; // Maximum horizontal speed
         const SPEED_BASE = 0.12;
         let gameSpeed = SPEED_BASE;
         
+        // Player lane constraints
+        const LANE_LEFT = -2;
+        const LANE_RIGHT = 2;
+        
         function initScene() {
             scene = new THREE.Scene();
-            scene.fog = new THREE.Fog(0x2d5f7a, 10, 50);
+            scene.fog = new THREE.Fog(0x7fa7d8, 20, 60);
             
             // Camera
             camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -841,7 +1082,7 @@
             // Renderer
             renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.setClearColor(0x1a3a52);
+            renderer.setClearColor(0x7fa7d8); // Banff sky blue
             document.getElementById('gameContainer').appendChild(renderer.domElement);
             
             // Lights
@@ -852,28 +1093,50 @@
             directionalLight.position.set(5, 10, 7);
             scene.add(directionalLight);
             
-            // Ground
+            // Ground (snow white)
             const groundGeometry = new THREE.PlaneGeometry(10, 100);
             const groundMaterial = new THREE.MeshStandardMaterial({ 
-                color: 0xe0f2ff,
-                roughness: 0.8
+                color: 0xffffff,
+                roughness: 0.9
             });
             const ground = new THREE.Mesh(groundGeometry, groundMaterial);
             ground.rotation.x = -Math.PI / 2;
             ground.position.z = -25;
             scene.add(ground);
             
+            // Background mountains (Banff style)
+            const mountainColors = [0x5a8cc9, 0x4a7db8, 0x3b6ba6];
+            for (let i = 0; i < 3; i++) {
+                const mountainGeometry = new THREE.ConeGeometry(15 + i * 3, 20 + i * 5, 4);
+                const mountainMaterial = new THREE.MeshStandardMaterial({ 
+                    color: mountainColors[i],
+                    flatShading: true
+                });
+                
+                const mountainLeft = new THREE.Mesh(mountainGeometry, mountainMaterial);
+                mountainLeft.position.set(-25 - i * 5, 8, -40 - i * 10);
+                mountainLeft.rotation.y = Math.PI / 4;
+                scene.add(mountainLeft);
+                
+                const mountainRight = new THREE.Mesh(mountainGeometry, mountainMaterial);
+                mountainRight.position.set(25 + i * 5, 8, -40 - i * 10);
+                mountainRight.rotation.y = -Math.PI / 4;
+                scene.add(mountainRight);
+            }
+            
             // Player (skier)
             const playerGeometry = new THREE.BoxGeometry(0.5, 1, 0.5);
-            const playerMaterial = new THREE.MeshStandardMaterial({ color: 0x3b82f6 });
+            const playerMaterial = new THREE.MeshStandardMaterial({ color: 0x0085c7 }); // Olympic blue
             player = new THREE.Mesh(playerGeometry, playerMaterial);
             player.position.set(0, 0.5, 0);
             scene.add(player);
             
-            // Side walls (trees)
+            // Side trees (Olympic ring colors: blue, yellow, black, green, red)
+            const olympicColors = [0x0085c7, 0xfcb131, 0x000000, 0x00a651, 0xee334e];
             for (let i = 0; i < 30; i++) {
                 const treeGeometry = new THREE.ConeGeometry(0.5, 2, 8);
-                const treeMaterial = new THREE.MeshStandardMaterial({ color: 0x10b981 });
+                const colorIndex = i % olympicColors.length;
+                const treeMaterial = new THREE.MeshStandardMaterial({ color: olympicColors[colorIndex] });
                 
                 const treeLeft = new THREE.Mesh(treeGeometry, treeMaterial);
                 treeLeft.position.set(-4, 1, -i * 3);
@@ -886,28 +1149,58 @@
         }
         
         function spawnObstacle() {
-            const obstacleGeometry = new THREE.BoxGeometry(0.8, 0.5, 0.8);
-            const obstacleMaterial = new THREE.MeshStandardMaterial({ color: 0x78716c });
+            const obstacleGeometry = new THREE.SphereGeometry(0.5, 16, 16); // Boulder shape
+            const obstacleMaterial = new THREE.MeshStandardMaterial({ 
+                color: 0x4a5568, // Rock gray
+                roughness: 0.9,
+                flatShading: true
+            });
             const obstacle = new THREE.Mesh(obstacleGeometry, obstacleMaterial);
             
             const lanes = [-2, 0, 2];
             obstacle.position.set(
                 lanes[Math.floor(Math.random() * lanes.length)],
-                0.25,
+                0.5,
                 -30
             );
+            obstacle.userData.hit = false;
+            obstacle.userData.rotationSpeed = Math.random() * 0.05 + 0.02;
             scene.add(obstacle);
             obstacles.push(obstacle);
         }
         
         function spawnBox() {
+            // Present box
             const boxGeometry = new THREE.BoxGeometry(0.6, 0.6, 0.6);
             const boxMaterial = new THREE.MeshStandardMaterial({ 
-                color: 0xfbbf24,
-                emissive: 0xfbbf24,
+                color: 0xee334e, // Olympic red
+                emissive: 0xee334e,
                 emissiveIntensity: 0.3
             });
             const box = new THREE.Mesh(boxGeometry, boxMaterial);
+            
+            // Ribbon (cross on top)
+            const ribbonMaterial = new THREE.MeshStandardMaterial({ 
+                color: 0xfcb131, // Olympic gold
+                emissive: 0xfcb131,
+                emissiveIntensity: 0.4
+            });
+            
+            // Horizontal ribbon
+            const ribbonH = new THREE.Mesh(
+                new THREE.BoxGeometry(0.7, 0.1, 0.1),
+                ribbonMaterial
+            );
+            ribbonH.position.y = 0.3;
+            box.add(ribbonH);
+            
+            // Vertical ribbon
+            const ribbonV = new THREE.Mesh(
+                new THREE.BoxGeometry(0.1, 0.7, 0.1),
+                ribbonMaterial
+            );
+            ribbonV.position.y = 0.05;
+            box.add(ribbonV);
             
             const lanes = [-2, 0, 2];
             box.position.set(
@@ -915,32 +1208,84 @@
                 1,
                 -30
             );
+            box.userData.rotation = Math.random() * 0.05 + 0.02;
+            box.userData.collected = false;
             scene.add(box);
             boxes.push(box);
-            
-            // Add rotation animation
-            box.userData.rotation = Math.random() * 0.05 + 0.02;
         }
         
         function updateSkiing() {
+            // Apply friction to horizontal velocity
+            playerVelocityX *= FRICTION;
+            
+            // Clamp horizontal velocity
+            if (Math.abs(playerVelocityX) < 0.001) playerVelocityX = 0;
+            if (playerVelocityX > MAX_SPEED) playerVelocityX = MAX_SPEED;
+            if (playerVelocityX < -MAX_SPEED) playerVelocityX = -MAX_SPEED;
+            
+            // Update player X position with velocity
+            player.position.x += playerVelocityX;
+            
+            // Constrain to lane boundaries
+            if (player.position.x < LANE_LEFT) {
+                player.position.x = LANE_LEFT;
+                playerVelocityX = 0;
+            }
+            if (player.position.x > LANE_RIGHT) {
+                player.position.x = LANE_RIGHT;
+                playerVelocityX = 0;
+            }
+            
+            // Add slight tilt based on velocity
+            player.rotation.z = -playerVelocityX * 2;
+            
             // Move obstacles and boxes
             obstacles.forEach((obstacle, index) => {
                 obstacle.position.z += gameSpeed;
+                obstacle.rotation.x += obstacle.userData.rotationSpeed;
+                obstacle.rotation.z += obstacle.userData.rotationSpeed * 0.7;
                 
                 // Check collision
-                if (Math.abs(obstacle.position.x - player.position.x) < 0.7 &&
+                if (!obstacle.userData.hit &&
+                    Math.abs(obstacle.position.x - player.position.x) < 0.7 &&
                     Math.abs(obstacle.position.z - player.position.z) < 0.7 &&
                     player.position.y < 1) {
                     
-                    // Hit obstacle
-                    scene.remove(obstacle);
-                    obstacles.splice(index, 1);
+                    obstacle.userData.hit = true;
+                    
+                    // Animate obstacle hit
+                    const startScale = obstacle.scale.clone();
+                    let animTime = 0;
+                    const animDuration = 0.3;
+                    
+                    const hitAnim = setInterval(() => {
+                        animTime += 0.016;
+                        const progress = animTime / animDuration;
+                        
+                        if (progress >= 1) {
+                            scene.remove(obstacle);
+                            obstacles.splice(index, 1);
+                            clearInterval(hitAnim);
+                        } else {
+                            obstacle.scale.set(
+                                startScale.x * (1 - progress),
+                                startScale.y * (1 - progress),
+                                startScale.z * (1 - progress)
+                            );
+                            obstacle.rotation.y += 0.2;
+                        }
+                    }, 16);
+                    
                     gameState.obstaclesHit++;
                     gameState.lives--;
                     gameState.fatigueLevel++;
                     playSound('hit');
                     showNotification('Hit Obstacle!');
                     updateHUD();
+                    
+                    // Screen shake effect
+                    camera.position.x = Math.random() * 0.2 - 0.1;
+                    setTimeout(() => camera.position.x = 0, 100);
                     
                     if (gameState.lives <= 0) {
                         endRun();
@@ -954,23 +1299,44 @@
                 }
             });
             
-            boxes.forEach((box, index) => {
+            // Use reverse loop to prevent index issues when removing items
+            for (let i = boxes.length - 1; i >= 0; i--) {
+                const box = boxes[i];
                 box.position.z += gameSpeed;
                 box.rotation.y += box.userData.rotation;
                 
+                // Floating animation
+                box.position.y = 1 + Math.sin(Date.now() * 0.003 + i) * 0.1;
+                
                 // Check collection
-                if (Math.abs(box.position.x - player.position.x) < 0.8 &&
+                if (!box.userData.collected &&
+                    Math.abs(box.position.x - player.position.x) < 0.8 &&
                     Math.abs(box.position.z - player.position.z) < 0.8) {
                     
-                    scene.remove(box);
-                    boxes.splice(index, 1);
+                    box.userData.collected = true;
+                    
+                    // Particle effect at box position
+                    const screenPos = box.position.clone().project(camera);
+                    const x = (screenPos.x + 1) / 2 * window.innerWidth;
+                    const y = (-screenPos.y + 1) / 2 * window.innerHeight;
+                    createParticleBurst(x, y, '#ee334e'); // Red present color
+                    
+                    // Animate box collection with smoother disappearance
+                    const startY = box.position.y;
+                    const startTime = Date.now();
+                    const animDuration = 600; // Smoother, longer animation
+                    
+                    box.userData.animationStartTime = startTime;
+                    box.userData.startY = startY;
+                    box.userData.isAnimating = true;
+                    
                     gameState.boxesCollected++;
                     gameState.score += 100;
                     playSound('collect');
-                    showNotification('+100 Box Collected!');
+                    showNotification('+100 Present Collected!');
                     updateHUD();
                     
-                    // Update progress
+                    // Update progress with smooth animation
                     document.getElementById('progressFill').style.width = 
                         (gameState.boxesCollected / 5 * 100) + '%';
                     
@@ -979,21 +1345,41 @@
                     }
                 }
                 
-                // Remove if off screen
-                if (box.position.z > 5) {
-                    scene.remove(box);
-                    boxes.splice(index, 1);
+                // Animate collected boxes
+                if (box.userData.isAnimating) {
+                    const elapsed = Date.now() - box.userData.animationStartTime;
+                    const progress = Math.min(elapsed / 600, 1);
+                    const easeOut = 1 - Math.pow(1 - progress, 3); // Cubic ease-out
+                    
+                    if (progress >= 1) {
+                        scene.remove(box);
+                        boxes.splice(i, 1);
+                    } else {
+                        const scale = 1 + easeOut * 0.8;
+                        box.scale.set(scale, scale, scale);
+                        box.position.y = box.userData.startY + easeOut * 3;
+                        box.material.opacity = 1 - easeOut;
+                        box.material.transparent = true;
+                        box.rotation.x += 0.1;
+                        box.rotation.z += 0.05;
+                    }
                 }
-            });
+                
+                // Remove if off screen
+                if (box.position.z > 5 && !box.userData.isAnimating) {
+                    scene.remove(box);
+                    boxes.splice(i, 1);
+                }
+            }
             
             // Jumping physics
             if (isJumping || player.position.y > 0.5) {
-                playerVelocity.y -= GRAVITY;
-                player.position.y += playerVelocity.y;
+                playerVelocityY -= GRAVITY;
+                player.position.y += playerVelocityY;
                 
                 if (player.position.y <= 0.5) {
                     player.position.y = 0.5;
-                    playerVelocity.y = 0;
+                    playerVelocityY = 0;
                     isJumping = false;
                 }
             }
@@ -1003,12 +1389,14 @@
             if (gameState.level < gameState.totalLevels) {
                 gameState.level++;
                 gameState.boxesCollected = 0;
-                gameSpeed += 0.02; // Increase difficulty
+                gameSpeed += 0.035; // Faster speed increase
                 document.getElementById('progressFill').style.width = '0%';
-                showNotification(`Level ${gameState.level}!`);
+                
+                // Smoother level up notification
+                showNotification(`🎉 Level ${gameState.level} Complete!`);
+                
                 updateHUD();
             } else {
-                // All levels complete, transition to shooting
                 transitionToShooting();
             }
         }
@@ -1041,6 +1429,17 @@
             gameState.mode = 'shooting';
             document.getElementById('transitionScreen').classList.remove('active');
             document.getElementById('crosshair').classList.add('active');
+            
+            // Show shooting instructions
+            const instructions = document.getElementById('instructions');
+            instructions.innerHTML = 'Move Mouse to Aim • Click: Shoot • 🔵 Blue = Correct • 🔴 Red = Wrong';
+            instructions.style.display = 'block';
+            
+            // Apply fatigue to crosshair
+            if (gameState.fatigueLevel > 3) {
+                document.getElementById('crosshair').classList.add('shooting');
+            }
+            
             document.getElementById('timer').classList.add('active');
             
             // Clear skiing objects
@@ -1053,14 +1452,6 @@
             camera.position.set(0, 2, 0);
             camera.lookAt(0, 2, -10);
             player.visible = false;
-            
-            // Apply fatigue effects
-            const crosshair = document.getElementById('crosshair');
-            if (gameState.fatigueLevel > 3) {
-                crosshair.style.animation = 'crosshairSway 0.8s ease-in-out infinite';
-            } else if (gameState.fatigueLevel > 1) {
-                crosshair.style.animation = 'crosshairSway 1.2s ease-in-out infinite';
-            }
             
             // Start timer
             shootingTimer = 60;
@@ -1092,7 +1483,7 @@
         }
         
         function spawnTarget() {
-            const isCorrect = Math.random() > 0.3; // 70% correct, 30% incorrect
+            const isCorrect = Math.random() > 0.3;
             
             const targetGeometry = new THREE.SphereGeometry(0.4, 16, 16);
             const targetMaterial = new THREE.MeshStandardMaterial({ 
@@ -1109,6 +1500,7 @@
             );
             target.userData.isCorrect = isCorrect;
             target.userData.speed = 0.05 + (gameState.fatigueLevel * 0.01);
+            target.userData.hit = false;
             
             scene.add(target);
             targets.push(target);
@@ -1118,6 +1510,10 @@
             targets.forEach((target, index) => {
                 target.position.y -= target.userData.speed;
                 target.rotation.y += 0.05;
+                
+                // Pulse animation
+                const scale = 1 + Math.sin(Date.now() * 0.005 + index) * 0.1;
+                target.scale.set(scale, scale, scale);
                 
                 // Remove if off screen
                 if (target.position.y < -2) {
@@ -1131,17 +1527,47 @@
             if (gameState.mode !== 'shooting') return;
             
             const raycaster = new THREE.Raycaster();
-            const mouse = new THREE.Vector2(0, 0); // Center of screen
+            const mouse = new THREE.Vector2(
+                (mouseX / window.innerWidth) * 2 - 1,
+                -(mouseY / window.innerHeight) * 2 + 1
+            );
             
             raycaster.setFromCamera(mouse, camera);
             const intersects = raycaster.intersectObjects(targets);
             
             if (intersects.length > 0) {
                 const target = intersects[0].object;
+                
+                if (target.userData.hit) return;
+                
+                target.userData.hit = true;
                 const isCorrect = target.userData.isCorrect;
                 
-                scene.remove(target);
-                targets.splice(targets.indexOf(target), 1);
+                // Particle effect
+                createParticleBurst(mouseX, mouseY, isCorrect ? '#3b82f6' : '#ef4444');
+                
+                // Animate target destruction
+                let animTime = 0;
+                const animDuration = 0.3;
+                
+                const destroyAnim = setInterval(() => {
+                    animTime += 0.016;
+                    const progress = animTime / animDuration;
+                    
+                    if (progress >= 1) {
+                        scene.remove(target);
+                        targets.splice(targets.indexOf(target), 1);
+                        clearInterval(destroyAnim);
+                    } else {
+                        target.scale.set(
+                            1 - progress,
+                            1 - progress,
+                            1 - progress
+                        );
+                        target.rotation.x += 0.3;
+                        target.rotation.z += 0.2;
+                    }
+                }, 16);
                 
                 gameState.shootingStats.totalShots++;
                 
@@ -1169,7 +1595,6 @@
             clearInterval(shootingInterval);
             clearInterval(targetSpawnInterval);
             
-            // Calculate accuracy
             if (gameState.shootingStats.totalShots > 0) {
                 gameState.shootingStats.accuracy = 
                     (gameState.shootingStats.correctHits / gameState.shootingStats.totalShots * 100).toFixed(1);
@@ -1196,7 +1621,6 @@
             document.getElementById('finalObstacles').textContent = gameState.obstaclesHit;
             document.getElementById('finalBoxes').textContent = gameState.boxesCollected + gameState.level - 1;
             
-            // Generate insight
             let insight = '';
             if (gameState.obstaclesHit > 3) {
                 insight = `You hit ${gameState.obstaclesHit} obstacles, which increased fatigue and reduced shooting accuracy. Players with fewer than 3 hits average 25% higher accuracy.`;
@@ -1210,7 +1634,6 @@
             
             document.getElementById('insightText').textContent = insight;
             
-            // Send to Snowflake (simulated)
             logToSnowflake();
             
             summaryScreen.classList.add('active');
@@ -1234,6 +1657,8 @@
         }
         
         // Animation Loop
+        let isPaused = false;
+        
         function animate() {
             requestAnimationFrame(animate);
             
@@ -1247,98 +1672,110 @@
             
             renderer.render(scene, camera);
         }
-
-
-// Pause functionality
-let isPaused = false;
-
-function togglePause() {
-    isPaused = !isPaused;
-    const notification = document.getElementById('notification');
-    
-    if (isPaused) {
-        notification.textContent = '⏸️ PAUSED - Press ESC to Resume';
-        notification.style.transform = 'translate(-50%, -50%) scale(1)';
-        notification.style.opacity = '1';
-    } else {
-        notification.style.transform = 'translate(-50%, -50%) scale(0)';
-        notification.style.opacity = '0';
-    }
-}
         
-// Input Handling
-const lanes = [-2, 0, 2]; // Left, Center, Right
-let currentLane = 1; // Start in center
-
-document.addEventListener('keydown', (e) => {
-    // Pause (works in any mode except menu)
-    if (e.code === 'Escape' && gameState.mode !== 'menu') {
-        togglePause();
-        return;
-    }
-    
-    // Don't allow input when paused
-    if (isPaused) return;
-    
-    if (gameState.mode === 'skiing') {
-        // Jump
-        if (e.code === 'Space' && !isJumping && player.position.y <= 0.5) {
-            playerVelocity.y = JUMP_FORCE;
-            isJumping = true;
+        function togglePause() {
+            isPaused = !isPaused;
+            const pauseMenu = document.getElementById('pauseMenu');
+            
+            if (isPaused) {
+                pauseMenu.classList.add('active');
+                document.body.style.cursor = 'auto';
+            } else {
+                pauseMenu.classList.remove('active');
+                document.body.style.cursor = 'none';
+            }
         }
         
-        // Move Left
-        if (e.code === 'ArrowLeft' && currentLane > 0) {
-            currentLane--;
-            player.position.x = lanes[currentLane];
-            playSound('collect');
+        // Input Handling
+        const keysPressed = {};
+        
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Escape' && gameState.mode !== 'menu') {
+                togglePause();
+                return;
+            }
+            
+            if (isPaused) return;
+            
+            keysPressed[e.code] = true;
+            
+            if (gameState.mode === 'skiing') {
+                if (e.code === 'Space' && !isJumping && player.position.y <= 0.5) {
+                    playerVelocityY = JUMP_FORCE;
+                    isJumping = true;
+                }
+            }
+        });
+        
+        document.addEventListener('keyup', (e) => {
+            keysPressed[e.code] = false;
+        });
+        
+        // Continuous movement with friction
+        function updatePlayerMovement() {
+            if (gameState.mode !== 'skiing' || isPaused) return;
+            
+            if (keysPressed['ArrowLeft']) {
+                playerVelocityX -= ACCELERATION;
+            }
+            if (keysPressed['ArrowRight']) {
+                playerVelocityX += ACCELERATION;
+            }
         }
         
-        // Move Right
-        if (e.code === 'ArrowRight' && currentLane < 2) {
-            currentLane++;
-            player.position.x = lanes[currentLane];
-            playSound('collect');
-        }
-    }
-});
+        setInterval(updatePlayerMovement, 16);
+        
+        // Mouse tracking for crosshair
+        document.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+            
+            const crosshair = document.getElementById('crosshair');
+            crosshair.style.left = mouseX + 'px';
+            crosshair.style.top = mouseY + 'px';
+        });
         
         document.addEventListener('click', shootTarget);
         
-        // Start Game
+        // Start Game with smooth countdown
         document.getElementById('startButton').addEventListener('click', () => {
             document.getElementById('menuScreen').classList.add('hidden');
             
-            // Show countdown
-            const notification = document.getElementById('notification');
+            const countdownEl = document.getElementById('countdown');
             let countdown = 3;
             
-            const countdownInterval = setInterval(() => {
+            function showCountdown() {
                 if (countdown > 0) {
-                    notification.textContent = countdown;
-                    notification.classList.add('show');
-                    setTimeout(() => notification.classList.remove('show'), 900);
+                    countdownEl.textContent = countdown;
+                    countdownEl.classList.remove('show');
+                    void countdownEl.offsetWidth;
+                    countdownEl.classList.add('show');
                     countdown--;
+                    setTimeout(showCountdown, 1200);
                 } else {
-                    notification.textContent = 'GO!';
-                    notification.classList.add('show');
-                    setTimeout(() => notification.classList.remove('show'), 500);
-                    clearInterval(countdownInterval);
+                    countdownEl.textContent = 'GO!';
+                    countdownEl.classList.remove('show');
+                    void countdownEl.offsetWidth;
+                    countdownEl.classList.add('show');
                     
-                    // Actually start game
-                    gameState.mode = 'skiing';
-                    gameState.startTime = Date.now();
-                    updateHUD();
-                    
-                    // Start spawning
-                    setInterval(() => {
-                        if (gameState.mode === 'skiing') {
-                            if (Math.random() > 0.3) spawnObstacle();
-                            if (Math.random() > 0.7) spawnBox();
-                        }
-                    }, 1500);
+                    setTimeout(() => {
+                        gameState.mode = 'skiing';
+                        gameState.startTime = Date.now();
+                        updateHUD();
+                        
+                        setInterval(() => {
+                            if (gameState.mode === 'skiing') {
+                                // More obstacles as levels increase
+                                const obstacleChance = 0.3 - (gameState.level * 0.05);
+                                if (Math.random() > obstacleChance) spawnObstacle();
+                                if (Math.random() > 0.7) spawnBox();
+                            }
+                        }, 1500);
+                    }, 1200);
                 }
-            }, 1000);
+            }
+            
+            showCountdown();
         });
         
         document.getElementById('continueButton').addEventListener('click', startShooting);
@@ -1347,7 +1784,12 @@ document.addEventListener('keydown', (e) => {
             location.reload();
         });
         
-        // Window Resize
+        document.getElementById('resumeBtn').addEventListener('click', togglePause);
+        
+        document.getElementById('quitBtn').addEventListener('click', () => {
+            location.reload();
+        });
+        
         window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
@@ -1359,9 +1801,6 @@ document.addEventListener('keydown', (e) => {
         initScene();
         animate();
         updateHUD();
-
-        
-    
     </script>
 </body>
 </html>
