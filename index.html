@@ -1237,20 +1237,49 @@
         function animate() {
             requestAnimationFrame(animate);
             
-            if (gameState.mode === 'skiing') {
-                updateSkiing();
-            } else if (gameState.mode === 'shooting') {
-                updateShooting();
+            if (!isPaused) {
+                if (gameState.mode === 'skiing') {
+                    updateSkiing();
+                } else if (gameState.mode === 'shooting') {
+                    updateShooting();
+                }
             }
             
             renderer.render(scene, camera);
         }
+
+
+// Pause functionality
+let isPaused = false;
+
+function togglePause() {
+    isPaused = !isPaused;
+    const notification = document.getElementById('notification');
+    
+    if (isPaused) {
+        notification.textContent = '⏸️ PAUSED - Press ESC to Resume';
+        notification.style.transform = 'translate(-50%, -50%) scale(1)';
+        notification.style.opacity = '1';
+    } else {
+        notification.style.transform = 'translate(-50%, -50%) scale(0)';
+        notification.style.opacity = '0';
+    }
+}
         
-        // Input Handling
+// Input Handling
 const lanes = [-2, 0, 2]; // Left, Center, Right
 let currentLane = 1; // Start in center
 
 document.addEventListener('keydown', (e) => {
+    // Pause (works in any mode except menu)
+    if (e.code === 'Escape' && gameState.mode !== 'menu') {
+        togglePause();
+        return;
+    }
+    
+    // Don't allow input when paused
+    if (isPaused) return;
+    
     if (gameState.mode === 'skiing') {
         // Jump
         if (e.code === 'Space' && !isJumping && player.position.y <= 0.5) {
@@ -1262,14 +1291,14 @@ document.addEventListener('keydown', (e) => {
         if (e.code === 'ArrowLeft' && currentLane > 0) {
             currentLane--;
             player.position.x = lanes[currentLane];
-            playSound('collect'); // Quick audio feedback
+            playSound('collect');
         }
         
         // Move Right
         if (e.code === 'ArrowRight' && currentLane < 2) {
             currentLane++;
             player.position.x = lanes[currentLane];
-            playSound('collect'); // Quick audio feedback
+            playSound('collect');
         }
     }
 });
